@@ -45,6 +45,12 @@ public class Video {
     @OneToMany(mappedBy = "video", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Like> likes;
 
+    @Transient
+    private long likeCount;
+
+    @Transient
+    private boolean likedByCurrentUser;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
@@ -54,5 +60,21 @@ public class Video {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void setLikeCount(long likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public long getLikeCount() {
+        return this.likeCount;
+    }
+
+    public void setLikedByCurrentUser(boolean likedByCurrentUser) {
+        this.likedByCurrentUser = likedByCurrentUser;
+    }
+
+    public boolean isLikedByCurrentUser() {
+        return this.likedByCurrentUser;
     }
 }

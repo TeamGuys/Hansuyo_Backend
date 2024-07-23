@@ -1,3 +1,4 @@
+<!--profile.html-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -5,7 +6,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        /* Add your CSS styles here */
+        .unlike-button {
+            background-color: #ff3b30;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -33,15 +41,30 @@
 <div th:if="${likedVideos.empty}">
     <p>You haven't liked any videos yet.</p>
 </div>
-<div th:each="video : ${likedVideos}">
+<div th:each="video : ${likedVideos}" th:id="'liked-video-' + ${video.id}">
     <h3 th:text="${video.title}">Video Title</h3>
     <p th:text="${video.description}">Video Description</p>
     <video width="320" height="240" controls>
         <source th:src="@{'/videos/file/' + ${video.videoUrl}}" type="video/mp4">
         Your browser does not support the video tag.
     </video>
+    <button class="unlike-button" th:onclick="'unlikeVideo(' + ${video.id} + ')'">Unlike</button>
 </div>
 
 <a href="/home">Back to Home</a>
+
+<script th:inline="javascript">
+    function unlikeVideo(videoId) {
+        fetch('/api/likes/' + videoId, {
+            method: 'DELETE'
+        })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('liked-video-' + videoId).remove();
+                }
+            });
+    }
+</script>
+
 </body>
 </html>

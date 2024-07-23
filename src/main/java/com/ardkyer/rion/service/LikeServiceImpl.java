@@ -6,7 +6,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -20,14 +19,24 @@ public class LikeServiceImpl implements LikeService {
 
     @Override
     @Transactional
-    public Like addLike(Like like) {
-        return likeRepository.save(like);
+    public boolean toggleLike(User user, Video video) {
+        Optional<Like> existingLike = likeRepository.findByUserAndVideo(user, video);
+        if (existingLike.isPresent()) {
+            likeRepository.delete(existingLike.get());
+            return false;
+        } else {
+            Like newLike = new Like();
+            newLike.setUser(user);
+            newLike.setVideo(video);
+            likeRepository.save(newLike);
+            return true;
+        }
     }
 
     @Override
     @Transactional
-    public void removeLike(Long id) {
-        likeRepository.deleteById(id);
+    public void removeLike(User user, Video video) {
+        likeRepository.deleteByUserAndVideo(user, video);
     }
 
     @Override

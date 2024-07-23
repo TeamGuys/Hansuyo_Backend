@@ -5,6 +5,7 @@ import com.ardkyer.rion.entity.Video;
 import com.ardkyer.rion.entity.User;
 import com.ardkyer.rion.service.VideoService;
 import com.ardkyer.rion.service.UserService;
+import com.ardkyer.rion.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
@@ -39,20 +40,39 @@ public class VideoController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private LikeService likeService;
+
     private static final String UPLOADED_FOLDER = "C:\\Users\\k0207\\datas\\";
 
     @GetMapping
-    public String listVideos(Model model) {
+    public String listVideos(Model model, Authentication authentication) {
         List<Video> videos = videoService.getAllVideos();
+        User currentUser = null;
+        if (authentication != null) {
+            currentUser = userService.findByUsername(authentication.getName());
+        }
+        for (Video video : videos) {
+            video.setLikeCount(likeService.getLikeCountForVideo(video));
+            if (currentUser != null) {
+                video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
+            }
+        }
         model.addAttribute("videos", videos);
-        return "videos";  // This should match your Thymeleaf template name
+        return "videos";
     }
 
     @GetMapping("/{id}")
-    public String watchVideo(@PathVariable Long id, Model model) {
+    public String watchVideo(@PathVariable Long id, Model model, Authentication authentication) {
         Optional<Video> videoOptional = videoService.getVideoById(id);
         if (videoOptional.isPresent()) {
-            model.addAttribute("video", videoOptional.get());
+            Video video = videoOptional.get();
+            video.setLikeCount(likeService.getLikeCountForVideo(video));
+            if (authentication != null) {
+                User currentUser = userService.findByUsername(authentication.getName());
+                video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
+            }
+            model.addAttribute("video", video);
             return "watchVideo";
         } else {
             return "redirect:/videos";
@@ -88,7 +108,7 @@ public class VideoController {
 
     @GetMapping("/upload")
     public String showUploadForm() {
-        return "uploadForm";  // This should match your upload form template name
+        return "uploadForm";
     }
 
     @PostMapping("/upload")
@@ -105,5 +125,4 @@ public class VideoController {
         videoService.uploadVideo(video, file);
         return "redirect:/videos";
     }
-
 }
