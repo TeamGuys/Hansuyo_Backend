@@ -1,3 +1,4 @@
+<!--videos.html-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -56,6 +57,17 @@
             border-radius: 5px;
             margin-bottom: 20px;
         }
+        .like-button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .like-count {
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -72,6 +84,8 @@
         <div class="video-info">
             <h3 class="video-title" th:text="${video.title}"></h3>
             <p class="video-user" th:text="${'Uploaded by ' + video.user.username}"></p>
+            <button th:id="'like-button-' + ${video.id}" class="like-button" th:onclick="'likeVideo(' + ${video.id} + ')'">Like</button>
+            <span th:id="'like-count-' + ${video.id}" class="like-count" th:text="${video.likeCount} + ' likes'"></span>
         </div>
     </div>
 </div>
@@ -108,6 +122,31 @@
             });
         });
     });
+
+    function likeVideo(videoId) {
+        fetch('/api/likes', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ videoId: videoId })
+        })
+            .then(response => response.json())
+            .then(data => {
+                const likeButton = document.getElementById('like-button-' + videoId);
+                const likeCount = document.getElementById('like-count-' + videoId);
+                if (data.liked) {
+                    likeButton.textContent = 'Unlike';
+                } else {
+                    likeButton.textContent = 'Like';
+                }
+                likeCount.textContent = data.likeCount + ' likes';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    }
+
 </script>
 </body>
 </html>
