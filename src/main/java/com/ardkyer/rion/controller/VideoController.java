@@ -1,34 +1,29 @@
 package com.ardkyer.rion.controller;
 
 import com.amazonaws.services.s3.model.S3Object;
+import com.ardkyer.rion.entity.Comment;
 import com.ardkyer.rion.entity.Video;
 import com.ardkyer.rion.entity.User;
+import com.ardkyer.rion.service.CommentService;
 import com.ardkyer.rion.service.VideoService;
 import com.ardkyer.rion.service.UserService;
 import com.ardkyer.rion.service.LikeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.net.MalformedURLException;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
 
 @Controller
 @RequestMapping("/videos")
@@ -43,11 +38,12 @@ public class VideoController {
     @Autowired
     private LikeService likeService;
 
-    private static final String UPLOADED_FOLDER = "C:\\Users\\k0207\\datas\\";
+    @Autowired
+    private CommentService commentService;
 
     @GetMapping
     public String listVideos(Model model, Authentication authentication) {
-        List<Video> videos = videoService.getAllVideos();
+        List<Video> videos = videoService.getAllVideosWithComments();
         User currentUser = null;
         if (authentication != null) {
             currentUser = userService.findByUsername(authentication.getName());
@@ -59,6 +55,18 @@ public class VideoController {
             }
         }
         model.addAttribute("videos", videos);
+        return "videos";
+    }
+
+    @GetMapping("/videos")
+    public String getVideos(Model model, Authentication authentication) {
+        List<Video> videos = videoService.getAllVideos();
+        Optional<User> currentUser = Optional.empty();
+        if (authentication != null) {
+            currentUser = userService.getUserByUsername(authentication.getName());
+        }
+        model.addAttribute("videos", videos);
+        model.addAttribute("currentUser", currentUser);
         return "videos";
     }
 
@@ -92,20 +100,6 @@ public class VideoController {
                 .body(new InputStreamResource(s3Object.getObjectContent()));
     }
 
-    private Resource loadAsResource(String filename) {
-        try {
-            Path file = Paths.get(UPLOADED_FOLDER).resolve(filename);
-            Resource resource = new UrlResource(file.toUri());
-            if (resource.exists() || resource.isReadable()) {
-                return resource;
-            } else {
-                throw new RuntimeException("Could not read file: " + filename);
-            }
-        } catch (MalformedURLException e) {
-            throw new RuntimeException("Could not read file: " + filename, e);
-        }
-    }
-
     @GetMapping("/upload")
     public String showUploadForm() {
         return "uploadForm";
@@ -124,5 +118,23 @@ public class VideoController {
         video.setUser(currentUser);
         videoService.uploadVideo(video, file);
         return "redirect:/videos";
+    }
+
+    @GetMapping("/{id}/comments")
+    public ResponseEntity<Page<Comment>> getVideoComments(@PathVariable Long id,
+                                                          @RequestParam(defaultValue = "0") int page,
+                                                          @RequestParam(defaultValue = "10") int size) {
+        Video video = new Video();
+        video.setId(id);
+        Page<Comment> comments = commentService.getCommentsByVideo(video, PageRequest.of(page, size));
+        return ResponseEntity.ok(comments);
+    }
+
+    @GetMapping("/{id}/top-comment")
+    public ResponseEntity<Comment> getTopComment(@PathVariable Long id) {
+        Video video = new Video();
+        video.setId(id);
+        Optional<Comment> topComment = commentService.getTopCommentForVideo(video);
+        return topComment.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 }

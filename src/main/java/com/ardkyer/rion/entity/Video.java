@@ -1,5 +1,6 @@
 package com.ardkyer.rion.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -11,7 +12,7 @@ import java.util.Set;
 
 @Entity
 @Table(name = "videos")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
+@Getter @Setter
 public class Video {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -39,6 +40,7 @@ public class Video {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "video", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Comment> comments;
 
@@ -74,7 +76,4 @@ public class Video {
         this.likedByCurrentUser = likedByCurrentUser;
     }
 
-    public boolean isLikedByCurrentUser() {
-        return this.likedByCurrentUser;
-    }
 }
