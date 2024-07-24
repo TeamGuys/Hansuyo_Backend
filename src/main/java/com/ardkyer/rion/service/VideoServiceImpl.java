@@ -7,11 +7,13 @@ import com.ardkyer.rion.entity.*;
 import com.ardkyer.rion.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -21,15 +23,16 @@ public class VideoServiceImpl implements VideoService {
 
     @Autowired
     private VideoRepository videoRepository;
-
+    private final CommentRepository commentRepository;
     private final AmazonS3 amazonS3Client;
 
     @Value("ardkyerspring1")
     private String bucketName;
 
     @Autowired
-    public VideoServiceImpl(VideoRepository videoRepository, AmazonS3 amazonS3Client) {
+    public VideoServiceImpl(VideoRepository videoRepository, CommentRepository commentRepository, AmazonS3 amazonS3Client) {
         this.videoRepository = videoRepository;
+        this.commentRepository = commentRepository;
         this.amazonS3Client = amazonS3Client;
     }
 
@@ -116,7 +119,17 @@ public class VideoServiceImpl implements VideoService {
     public List<Video> getAllVideosWithComments() {
         List<Video> videos = videoRepository.findAll();
         for (Video video : videos) {
-            video.getComments().size(); // 이 부분이 댓글을 로드합니다
+            video.getComments().size();
+        }
+        return videos;
+    }
+
+    @Override
+    public List<Video> getAllVideosWithSortedComments() {
+        List<Video> videos = videoRepository.findAll();
+        PageRequest topFiveComments = PageRequest.of(0, 5);
+        for (Video video : videos) {
+            video.setComments(new HashSet<>(commentRepository.findTop5ByVideoOrderByLikeCountDescCreatedAtDesc(video, topFiveComments)));
         }
         return videos;
     }
