@@ -18,11 +18,13 @@ import java.util.Optional;
 public class UserController {
     private final UserService userService;
     private final VideoService videoService;
+    private final CommentService commentService;
 
     @Autowired
-    public UserController(UserService userService, VideoService videoService) {
+    public UserController(UserService userService, VideoService videoService, CommentService commentService) {
         this.userService = userService;
         this.videoService = videoService;
+        this.commentService = commentService;
     }
 
     // Existing REST API endpoints
@@ -70,10 +72,12 @@ public class UserController {
 
         List<Video> userVideos = videoService.getVideosByUser(currentUser);
         List<Video> likedVideos = videoService.getLikedVideosByUser(currentUser);
+        List<Comment> userComments = commentService.getCommentsByUser(currentUser);
 
         model.addAttribute("user", currentUser);
         model.addAttribute("userVideos", userVideos);
         model.addAttribute("likedVideos", likedVideos);
+        model.addAttribute("userComments", userComments);
 
         return "profile";
     }

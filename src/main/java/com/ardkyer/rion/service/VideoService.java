@@ -19,4 +19,5 @@ public interface VideoService {
     void deleteVideo(Long id);
     List<Video> getAllVideos();
     void incrementViewCount(Long videoId);
+    List<Video> getAllVideosWithComments();
 }

@@ -19,7 +19,9 @@ import java.util.UUID;
 @Service
 public class VideoServiceImpl implements VideoService {
 
-    private final VideoRepository videoRepository;
+    @Autowired
+    private VideoRepository videoRepository;
+
     private final AmazonS3 amazonS3Client;
 
     @Value("ardkyerspring1")
@@ -108,5 +110,14 @@ public class VideoServiceImpl implements VideoService {
             video.setViewCount(video.getViewCount() + 1);
             videoRepository.save(video);
         }
+    }
+
+    @Override
+    public List<Video> getAllVideosWithComments() {
+        List<Video> videos = videoRepository.findAll();
+        for (Video video : videos) {
+            video.getComments().size(); // 이 부분이 댓글을 로드합니다
+        }
+        return videos;
     }
 }
