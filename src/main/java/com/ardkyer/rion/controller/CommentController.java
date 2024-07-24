@@ -49,7 +49,7 @@ public class CommentController {
 
     @GetMapping("/videos")
     public String getVideos(Model model, Authentication authentication) {
-        List<Video> videos = videoService.getAllVideos();
+        List<Video> videos = videoService.getAllVideosWithSortedComments();
         Optional<Optional<User>> currentUser = Optional.empty();
         if (authentication != null) {
             currentUser = Optional.ofNullable(userService.getUserByUsername(authentication.getName()));
@@ -61,8 +61,8 @@ public class CommentController {
 
     @GetMapping("/video/{videoId}")
     public ResponseEntity<Page<Comment>> getCommentsByVideo(@PathVariable Long videoId, Pageable pageable) {
-        Video video = new Video();
-        video.setId(videoId);
+        Video video = videoService.getVideoById(videoId)
+                .orElseThrow(() -> new RuntimeException("Video not found"));
         Page<Comment> comments = commentService.getCommentsByVideo(video, pageable);
         return new ResponseEntity<>(comments, HttpStatus.OK);
     }

@@ -8,6 +8,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -42,7 +45,8 @@ public class Video {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "video", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Comment> comments;
+    @OrderBy("likeCount DESC, createdAt DESC")
+    private List<Comment> comments = new ArrayList<>();
 
     @OneToMany(mappedBy = "video", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Like> likes;
@@ -76,4 +80,7 @@ public class Video {
         this.likedByCurrentUser = likedByCurrentUser;
     }
 
+    public void setComments(Set<Comment> comments) {
+        this.comments = (List<Comment>) comments;
+    }
 }

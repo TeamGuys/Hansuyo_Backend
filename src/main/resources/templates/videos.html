@@ -139,6 +139,7 @@
                         <span class="comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
                     </div>
                 </div>
+                <button th:onclick="'loadMoreComments(' + ${video.id} + ')'" class="show-more-button">Load more comments</button>
                 <form th:id="'comment-form-' + ${video.id}" class="comment-form">
                     <input type="text" th:id="'comment-input-' + ${video.id}" class="comment-input" placeholder="Add a comment...">
                     <button type="submit" class="comment-submit">Post</button>
@@ -223,24 +224,26 @@
     }
 
     function loadComments(videoId, page = 0) {
-        fetch(`/videos/${videoId}/comments?page=${page}`)
+        fetch(`/api/comments/video/${videoId}?page=${page}&size=10&sort=likeCount,desc&sort=createdAt,desc`)
             .then(response => response.json())
             .then(data => {
                 const commentsElement = document.getElementById(`comments-${videoId}`);
                 data.content.forEach(comment => {
                     commentsElement.innerHTML += `
-                        <div class="comment">
-                            <p>${comment.content}</p>
-                            <small>By ${comment.user.username}</small>
-                            <button onclick="likeComment(${comment.id})" class="comment-like-button">Like</button>
-                            <span>${comment.likeCount} likes</span>
-                        </div>
-                    `;
+                    <div class="comment">
+                        <p>${comment.content}</p>
+                        <small>By ${comment.user.username}</small>
+                        <button onclick="likeComment(${comment.id})" class="comment-like-button">
+                            ${comment.likedByCurrentUser ? 'Unlike' : 'Like'}
+                        </button>
+                        <span class="comment-like-count">${comment.likeCount} likes</span>
+                    </div>
+                `;
                 });
                 if (!data.last) {
                     commentsElement.innerHTML += `
-                        <button onclick="loadComments(${videoId}, ${page + 1})" class="show-more-button">Load more</button>
-                    `;
+                    <button onclick="loadComments(${videoId}, ${page + 1})" class="show-more-button">Load more</button>
+                `;
                 }
             })
             .catch(error => console.error('Error:', error));
@@ -307,6 +310,32 @@
                         likeButton.textContent = data.liked ? 'Unlike' : 'Like';
                         likeCount.textContent = `${data.likeCount} likes`;
                     }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    function loadMoreComments(videoId) {
+        const commentsElement = document.getElementById(`comments-${videoId}`);
+        const commentCount = commentsElement.children.length;
+
+        fetch(`/api/comments/video/${videoId}?page=${Math.floor(commentCount / 5)}&size=5&sort=likeCount,desc&sort=createdAt,desc`)
+            .then(response => response.json())
+            .then(data => {
+                data.content.forEach(comment => {
+                    commentsElement.innerHTML += `
+                    <div class="comment" data-comment-id="${comment.id}">
+                        <p>${comment.content}</p>
+                        <small>By ${comment.user.username}</small>
+                        <button onclick="likeComment(${comment.id})" class="comment-like-button">
+                            ${comment.likedByCurrentUser ? 'Unlike' : 'Like'}
+                        </button>
+                        <span class="comment-like-count">${comment.likeCount} likes</span>
+                    </div>
+                `;
+                });
+                if (data.last) {
+                    document.querySelector(`button[onclick="loadMoreComments(${videoId})"]`).style.display = 'none';
                 }
             })
             .catch(error => console.error('Error:', error));

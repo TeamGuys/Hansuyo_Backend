@@ -37,7 +37,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public Page<Comment> getCommentsByVideo(Video video, Pageable pageable) {
-        return commentRepository.findByVideoOrderByCreatedAtDesc(video, pageable);
+        return commentRepository.findByVideoOrderByLikeCountDescCreatedAtDesc(video, pageable);
     }
 
     @Override

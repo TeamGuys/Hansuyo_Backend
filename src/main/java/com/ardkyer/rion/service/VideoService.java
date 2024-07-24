@@ -20,4 +20,5 @@ public interface VideoService {
     List<Video> getAllVideos();
     void incrementViewCount(Long videoId);
     List<Video> getAllVideosWithComments();
+    List<Video> getAllVideosWithSortedComments();
 }
