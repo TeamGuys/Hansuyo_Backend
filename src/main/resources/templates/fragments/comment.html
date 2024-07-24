@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="commentItem" class="comment" th:data-comment-id="${comment.id}">
+    <p th:text="${comment.content}">Comment content</p>
+    <small th:text="${'By ' + comment.user.username}">By Username</small>
+    <button th:onclick="'likeComment(' + ${comment.id} + ')'" class="comment-like-button">
+        <span th:text="${comment.isLikedByCurrentUser(currentUser) ? 'Unlike' : 'Like'}">Like</span>
+    </button>
+    <span class="comment-like-count" th:text="${comment.likeCount} + ' likes'"></span>
+</div>
+</body>
+</html>

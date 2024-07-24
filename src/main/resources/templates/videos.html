@@ -118,24 +118,26 @@
     <div th:each="video : ${videos}" class="video-item">
         <div class="video-container">
             <video th:id="'video-' + ${video.id}" loop muted>
-                <source th:src="@{'/videos/file/' + ${video.videoUrl}}" type="video/mp4">
+                <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
         <div class="video-info">
-            <h3 class="video-title" th:text="${video.title}"></h3>
-            <p class="video-user" th:text="${'Uploaded by ' + video.user.username}"></p>
-            <button th:id="'like-button-' + ${video.id}" class="like-button" th:onclick="'likeVideo(' + ${video.id} + ')'">Like</button>
-            <span th:id="'like-count-' + ${video.id}" class="like-count" th:text="${video.likeCount} + ' likes'"></span>
+            <h3 class="video-title" th:text="${video?.title}"></h3>
+            <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
+            <button th:id="'like-button-' + ${video?.id}" class="like-button" th:onclick="'likeVideo(' + ${video?.id} + ')'">Like</button>
+            <span th:id="'like-count-' + ${video?.id}" class="like-count" th:text="${video?.likeCount} + ' likes'"></span>
             <div class="comment-section">
                 <h4>Comments:</h4>
-                <div th:each="comment : ${video.comments}" class="comment" th:data-comment-id="${comment.id}">
-                    <p th:text="${comment.content}">Comment content</p>
-                    <small th:text="${'By ' + comment.user.username}">By Username</small>
-                    <button th:onclick="'likeComment(' + ${comment.id} + ')'" class="comment-like-button">
-                        <span th:text="${comment.isLikedByCurrentUser(currentUser) ? 'Unlike' : 'Like'}">Like</span>
-                    </button>
-                    <span class="comment-like-count" th:text="${comment.likeCount} + ' likes'"></span>
+                <div th:id="'comments-' + ${video.id}">
+                    <div th:each="comment : ${video.comments}" th:fragment="commentItem" class="comment" th:data-comment-id="${comment?.id}">
+                        <p th:text="${comment?.content}">Comment content</p>
+                        <small th:text="${'By ' + comment?.user?.username}">By Username</small>
+                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="comment-like-button">
+                            <span th:text="${currentUser != null and currentUser.isPresent() and comment != null and comment.isLikedByCurrentUser(currentUser.get()) ? 'Unlike' : 'Like'}">Like</span>
+                        </button>
+                        <span class="comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
+                    </div>
                 </div>
                 <form th:id="'comment-form-' + ${video.id}" class="comment-form">
                     <input type="text" th:id="'comment-input-' + ${video.id}" class="comment-input" placeholder="Add a comment...">
@@ -265,19 +267,11 @@
                 },
                 body: JSON.stringify({ videoId: videoId, content: content })
             })
-                .then(response => response.json())
-                .then(comment => {
+                .then(response => response.text())
+                .then(html => {
                     commentInput.value = '';
                     const commentsElement = document.getElementById(`comments-${videoId}`);
-                    const newCommentHtml = `
-                    <div class="comment" id="comment-${comment.id}">
-                        <p>${comment.content}</p>
-                        <small>By ${comment.user.username}</small>
-                        <button onclick="likeComment(${comment.id})" class="comment-like-button">Like</button>
-                        <span class="comment-like-count">${comment.likeCount} likes</span>
-                    </div>
-                `;
-                    commentsElement.insertAdjacentHTML('afterbegin', newCommentHtml);
+                    commentsElement.insertAdjacentHTML('afterbegin', html);
                 })
                 .catch(error => console.error('Error:', error));
         }

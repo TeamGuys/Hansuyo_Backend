@@ -10,7 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -21,27 +24,14 @@ public class CommentController {
     private final CommentService commentService;
     private final UserService userService;
     private final VideoService videoService;
+    private final TemplateEngine templateEngine;
 
     @Autowired
-    public CommentController(CommentService commentService, UserService userService, VideoService videoService) {
+    public CommentController(CommentService commentService, UserService userService, VideoService videoService, TemplateEngine templateEngine) {
         this.commentService = commentService;
         this.userService = userService;
         this.videoService = videoService;
-    }
-
-    @PostMapping
-    public ResponseEntity<Comment> addComment(@RequestBody Map<String, String> payload, Authentication authentication) {
-        User user = userService.findByUsername(authentication.getName());
-        Video video = videoService.getVideoById(Long.parseLong(payload.get("videoId")))
-                .orElseThrow(() -> new RuntimeException("Video not found"));
-
-        Comment comment = new Comment();
-        comment.setContent(payload.get("content"));
-        comment.setUser(user);
-        comment.setVideo(video);
-
-        Comment addedComment = commentService.addComment(comment);
-        return new ResponseEntity<>(addedComment, HttpStatus.CREATED);
+        this.templateEngine = templateEngine;
     }
 
     @PostMapping("/{commentId}/like")
@@ -60,9 +50,9 @@ public class CommentController {
     @GetMapping("/videos")
     public String getVideos(Model model, Authentication authentication) {
         List<Video> videos = videoService.getAllVideos();
-        Optional<User> currentUser = Optional.empty();
+        Optional<Optional<User>> currentUser = Optional.empty();
         if (authentication != null) {
-            currentUser = userService.getUserByUsername(authentication.getName());
+            currentUser = Optional.ofNullable(userService.getUserByUsername(authentication.getName()));
         }
         model.addAttribute("videos", videos);
         model.addAttribute("currentUser", currentUser);
@@ -94,5 +84,40 @@ public class CommentController {
         }
         commentService.deleteComment(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping
+    public ResponseEntity<String> addComment(@RequestBody Map<String, String> payload, Authentication authentication) {
+        try {
+            User user = userService.findByUsername(authentication.getName());
+            Video video = videoService.getVideoById(Long.parseLong(payload.get("videoId")))
+                    .orElseThrow(() -> new RuntimeException("Video not found"));
+
+            Comment comment = new Comment();
+            comment.setContent(payload.get("content"));
+            comment.setUser(user);
+            comment.setVideo(video);
+
+            Comment addedComment = commentService.addComment(comment);
+
+            Context context = new Context();
+            context.setVariable("comment", addedComment);
+            context.setVariable("currentUser", user);
+
+            String commentHtml = templateEngine.process("fragments/comment", context);
+            return ResponseEntity.ok(commentHtml);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error processing comment: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+        }
+    }
+
+    private String renderCommentFragment(Comment comment, User currentUser) {
+        Context context = new Context();
+        context.setVariable("comment", comment);
+        context.setVariable("currentUser", currentUser);
+
+        return templateEngine.process("fragments/comment :: commentItem", context);
     }
 }

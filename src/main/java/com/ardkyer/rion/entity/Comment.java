@@ -52,8 +52,11 @@ public class Comment {
         updatedAt = LocalDateTime.now();
     }
 
-    public boolean isLikedByCurrentUser(User currentUser) {
-        return this.likes.stream()
-                .anyMatch(like -> like.getUser().equals(currentUser));
+    public boolean isLikedByCurrentUser(User user) {
+        if (user == null) {
+            return false;
+        }
+        return this.getLikes().stream()
+                .anyMatch(like -> like.getUser().equals(user));
     }
 }
