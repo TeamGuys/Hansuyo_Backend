@@ -1,18 +1,16 @@
 package com.ardkyer.rion.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Set;
 
 @Entity
 @Table(name = "user")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class User {
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class User implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,10 +18,10 @@ public class User {
     @Column(nullable = false, unique = true)
     private String username;
 
-    @Column(nullable = false, unique = true)
+    @Column(unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column()
     private String passwordHash;
 
     @Column(name = "profile_picture")
@@ -34,6 +32,7 @@ public class User {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private Set<Video> videos;
@@ -55,6 +54,9 @@ public class User {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
     }
+
+    private String provider;
+    private String providerId;
 
     @PreUpdate
     protected void onUpdate() {
