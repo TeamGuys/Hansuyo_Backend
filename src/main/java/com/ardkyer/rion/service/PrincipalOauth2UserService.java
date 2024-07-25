@@ -10,6 +10,8 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
 
@@ -21,15 +23,23 @@ public class PrincipalOauth2UserService extends DefaultOAuth2UserService {
         OAuth2User oauth2User = super.loadUser(userRequest);
 
         String provider = userRequest.getClientRegistration().getRegistrationId();
-        String providerId = oauth2User.getAttribute("sub");
+        String providerId;
+
+        if ("google".equals(provider)) {
+            providerId = oauth2User.getAttribute("sub");
+        } else if ("kakao".equals(provider)) {
+            Map<String, Object> attributes = oauth2User.getAttributes();
+            providerId = String.valueOf(attributes.get("id")); // Explicitly convert to String
+        } else {
+            throw new OAuth2AuthenticationException("Unsupported provider: " + provider);
+        }
+
         String username = provider + "_" + providerId;
-        String email = oauth2User.getAttribute("email");
 
         User user = userRepository.findByUsername(username)
                 .orElseGet(() -> {
                     User newUser = new User();
                     newUser.setUsername(username);
-                    newUser.setEmail(email);
                     newUser.setProvider(provider);
                     newUser.setProviderId(providerId);
                     return userRepository.save(newUser);
