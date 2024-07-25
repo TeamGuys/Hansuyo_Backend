@@ -32,21 +32,24 @@ public class SecurityConfig {
                         .failureUrl("/login?error=true")
 
                 )
-                .oauth2Login(login -> login
-                        .loginPage("/security-login/login")
-                        .defaultSuccessUrl("/security-login")
-                        .userInfoEndpoint(userInfoEndpoint -> userInfoEndpoint
-                                .userService(principalOauth2UserService))
+                .oauth2Login(oauth2 -> oauth2
+                        .loginPage("/login")
+                        .defaultSuccessUrl("/home")
+                        .userInfoEndpoint(userInfo -> userInfo
+                                .userService(principalOauth2UserService)
+                        )
                 )
-
-
-
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
-                        .invalidateHttpSession(true).deleteCookies("JSESSIONID")
+                        .invalidateHttpSession(true)
+                        .deleteCookies("JSESSIONID")
                 );
 
         return http.build();
+    }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 
 }

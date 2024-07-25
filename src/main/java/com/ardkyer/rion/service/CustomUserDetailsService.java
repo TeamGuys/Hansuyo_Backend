@@ -2,6 +2,7 @@ package com.ardkyer.rion.service;
 
 import com.ardkyer.rion.entity.User;
 import com.ardkyer.rion.repository.UserRepository;
+import com.ardkyer.rion.security.PrincipalDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
