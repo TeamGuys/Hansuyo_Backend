@@ -2,6 +2,11 @@ package com.ardkyer.rion.controller;
 
 import com.ardkyer.rion.entity.*;
 import com.ardkyer.rion.service.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,13 +18,13 @@ import org.springframework.web.bind.annotation.*;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/comments")
+@Tag(name = "Comments", description = "Comment management API")
 public class CommentController {
     private final CommentService commentService;
     private final UserService userService;
@@ -35,19 +40,33 @@ public class CommentController {
     }
 
     @PostMapping("/{commentId}/like")
-    public ResponseEntity<Map<String, Object>> toggleCommentLike(@PathVariable Long commentId, Authentication authentication) {
+    @Operation(summary = "Toggle like on a comment", description = "Likes or unlikes a comment for the authenticated user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully toggled like"),
+            @ApiResponse(responseCode = "404", description = "Comment not found")
+    })
+    public ResponseEntity<Map<String, Object>> toggleCommentLike(
+            @Parameter(description = "ID of the comment to like/unlike", required = true) @PathVariable Long commentId,
+            Authentication authentication) {
         User user = userService.findByUsername(authentication.getName());
         return ResponseEntity.ok(commentService.toggleLike(commentId, user));
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Comment> getCommentById(@PathVariable Long id) {
+    @Operation(summary = "Get a comment by ID", description = "Returns a single comment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved comment"),
+            @ApiResponse(responseCode = "404", description = "Comment not found")
+    })
+    public ResponseEntity<Comment> getCommentById(
+            @Parameter(description = "ID of the comment to retrieve", required = true) @PathVariable Long id) {
         return commentService.getCommentById(id)
                 .map(comment -> new ResponseEntity<>(comment, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/videos")
+    @Operation(summary = "Get all videos with sorted comments", description = "Returns a list of videos with their comments sorted")
     public String getVideos(Model model, Authentication authentication) {
         List<Video> videos = videoService.getAllVideosWithSortedComments();
         Optional<Optional<User>> currentUser = Optional.empty();
@@ -60,7 +79,14 @@ public class CommentController {
     }
 
     @GetMapping("/video/{videoId}")
-    public ResponseEntity<Page<Comment>> getCommentsByVideo(@PathVariable Long videoId, Pageable pageable) {
+    @Operation(summary = "Get comments for a video", description = "Returns a paginated list of comments for a specific video")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved comments"),
+            @ApiResponse(responseCode = "404", description = "Video not found")
+    })
+    public ResponseEntity<Page<Comment>> getCommentsByVideo(
+            @Parameter(description = "ID of the video", required = true) @PathVariable Long videoId,
+            @Parameter(description = "Pageable information") Pageable pageable) {
         Video video = videoService.getVideoById(videoId)
                 .orElseThrow(() -> new RuntimeException("Video not found"));
         Page<Comment> comments = commentService.getCommentsByVideo(video, pageable);
@@ -68,7 +94,14 @@ public class CommentController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Comment> updateComment(@PathVariable Long id, @RequestBody Comment comment) {
+    @Operation(summary = "Update a comment", description = "Updates an existing comment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated comment"),
+            @ApiResponse(responseCode = "404", description = "Comment not found")
+    })
+    public ResponseEntity<Comment> updateComment(
+            @Parameter(description = "ID of the comment to update", required = true) @PathVariable Long id,
+            @Parameter(description = "Updated comment object", required = true) @RequestBody Comment comment) {
         if (!commentService.getCommentById(id).isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -78,7 +111,13 @@ public class CommentController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteComment(@PathVariable Long id) {
+    @Operation(summary = "Delete a comment", description = "Deletes an existing comment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "204", description = "Successfully deleted comment"),
+            @ApiResponse(responseCode = "404", description = "Comment not found")
+    })
+    public ResponseEntity<Void> deleteComment(
+            @Parameter(description = "ID of the comment to delete", required = true) @PathVariable Long id) {
         if (!commentService.getCommentById(id).isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -87,7 +126,16 @@ public class CommentController {
     }
 
     @PostMapping
-    public ResponseEntity<String> addComment(@RequestBody Map<String, String> payload, Authentication authentication) {
+    @Operation(summary = "Add a new comment", description = "Creates a new comment for a video")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully added comment"),
+            @ApiResponse(responseCode = "400", description = "Invalid input"),
+            @ApiResponse(responseCode = "404", description = "Video not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    public ResponseEntity<String> addComment(
+            @Parameter(description = "Comment details", required = true) @RequestBody Map<String, String> payload,
+            Authentication authentication) {
         try {
             User user = userService.findByUsername(authentication.getName());
             Video video = videoService.getVideoById(Long.parseLong(payload.get("videoId")))
@@ -109,7 +157,7 @@ public class CommentController {
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Error processing comment: " + e.getMessage() + "\n" + Arrays.toString(e.getStackTrace()));
+                    .body("Error processing comment: " + e.getMessage());
         }
     }
 
