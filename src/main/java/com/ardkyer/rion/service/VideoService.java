@@ -25,5 +25,6 @@ public interface VideoService {
     List<Video> getAllVideosWithComments();
     List<Video> getAllVideosWithSortedComments();
     void saveHashtagsFromDescription(String description);
-    public List<Video> searchVideos(String query);
+    List<Video> searchVideos(String query);
+    List<Video> searchVideosByHashtags(Set<String> hashtags);
 }

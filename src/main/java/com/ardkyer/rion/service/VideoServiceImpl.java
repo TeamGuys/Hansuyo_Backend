@@ -14,7 +14,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 
@@ -170,6 +169,11 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public List<Video> searchVideos(String query) {
         return videoRepository.findByHashtagsNameContainingOrUserUsernameContaining(query, query);
+    }
+
+    @Override
+    public List<Video> searchVideosByHashtags(Set<String> hashtags) {
+        return videoRepository.findByHashtagsIn(hashtags);
     }
 
     private void saveHashtags(Set<String> hashtags) {

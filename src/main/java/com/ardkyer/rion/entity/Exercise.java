@@ -6,12 +6,11 @@ import lombok.Setter;
 
 import java.util.Set;
 
-
 @Entity
-@Table(name = "hashtags")
+@Table(name = "exercise")
 @Getter
 @Setter
-public class Hashtag {
+public class Exercise {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,9 +18,11 @@ public class Hashtag {
     @Column(unique = true, nullable = false)
     private String name;
 
-    @ManyToMany(mappedBy = "hashtags")
-    private Set<Video> videos;
-
-    @ManyToMany(mappedBy = "hashtags")
-    private Set<Exercise> exercises;
+    @ManyToMany
+    @JoinTable(
+            name = "exercise_hashtag",
+            joinColumns = @JoinColumn(name = "exercise_id"),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id")
+    )
+    private Set<Hashtag> hashtags;
 }
