@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Search Results</title>
+</head>
+<body>
+<h1>Search Results</h1>
+<div>
+    <ul>
+        <li th:each="video : ${videos}">
+            <a th:href="@{'/videos/' + ${video.id}}">
+                <span th:text="${video.title}">Video Title</span>
+                by <span th:text="${video.user.username}">Username</span>
+            </a>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

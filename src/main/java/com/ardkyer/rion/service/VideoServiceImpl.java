@@ -166,6 +166,12 @@ public class VideoServiceImpl implements VideoService {
             saveHashtags(hashtags);
         }
     }
+
+    @Override
+    public List<Video> searchVideos(String query) {
+        return videoRepository.findByHashtagsNameContainingOrUserUsernameContaining(query, query);
+    }
+
     private void saveHashtags(Set<String> hashtags) {
         hashtags.forEach(name -> hashtagRepository.findByName(name)
                 .orElseGet(() -> {

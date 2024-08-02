@@ -1,6 +1,7 @@
 package com.ardkyer.rion.service;
 
 import com.amazonaws.services.s3.model.S3Object;
+import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import com.ardkyer.rion.entity.*;
 
@@ -9,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+@Service
 public interface VideoService {
     Video uploadVideo(Video video, MultipartFile file , Set<String> hashtagNames) throws IOException;
     S3Object getVideoFile(String fileName);
@@ -23,4 +25,5 @@ public interface VideoService {
     List<Video> getAllVideosWithComments();
     List<Video> getAllVideosWithSortedComments();
     void saveHashtagsFromDescription(String description);
+    public List<Video> searchVideos(String query);
 }

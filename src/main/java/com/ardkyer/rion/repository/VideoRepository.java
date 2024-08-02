@@ -11,4 +11,5 @@ public interface VideoRepository extends JpaRepository<Video, Long> {
     List<Video> findByUserOrderByCreatedAtDesc(User user);
     List<Video> findTop10ByOrderByViewCountDesc();
     List<Video> findByLikesUser(User user);
+    List<Video> findByHashtagsNameContainingOrUserUsernameContaining(String hashtag, String username);
 }
