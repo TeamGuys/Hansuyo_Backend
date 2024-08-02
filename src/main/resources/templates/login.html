@@ -1,35 +1,126 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rion - Login</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #121212;
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background-color: #1c1c1c;
+            padding: 40px;
+            border-radius: 10px;
+            width: 300px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input {
+            margin-bottom: 15px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #2c2c2c;
+            color: #ffffff;
+        }
+        button {
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            background-color: #3897f0;
+            color: #ffffff;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #1877f2;
+        }
+        .error {
+            color: #ed4956;
+            margin-bottom: 15px;
+        }
+        .success {
+            color: #70c050;
+            margin-bottom: 15px;
+        }
+        .social-buttons {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+        .social-button {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .social-button:hover {
+            opacity: 0.8;
+        }
+        .google-button {
+            background-color: #db4437;
+        }
+        .kakao-button {
+            background-color: #fee500;
+            color: #000000;
+        }
+        .register-link {
+            text-align: center;
+            margin-top: 20px;
+        }
+        a {
+            color: #3897f0;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </head>
 <body>
-<h2>Login</h2>
-<form th:action="@{/login}" method="post">
-    <div th:if="${param.error}">
-        <p style="color: red;">Invalid username or password.</p>
+<div class="container">
+    <h2>Login to Hansuyo</h2>
+    <form th:action="@{/login}" method="post">
+        <div th:if="${param.error}" class="error">
+            Invalid username or password.
+        </div>
+        <div th:if="${param.logout}" class="success">
+            You have been logged out.
+        </div>
+        <input type="text" id="username" name="username" placeholder="Username" required>
+        <input type="password" id="password" name="password" placeholder="Password" required>
+        <button type="submit">Login</button>
+    </form>
+    <div class="social-buttons">
+        <a href="/oauth2/authorization/google">
+            <button class="social-button google-button">Login with Google</button>
+        </a>
+        <a href="/oauth2/authorization/kakao">
+            <button class="social-button kakao-button">Login with Kakao</button>
+        </a>
     </div>
-    <div th:if="${param.logout}">
-        <p style="color: green;">You have been logged out.</p>
+    <div class="register-link">
+        <a href="/register">Create an account</a>
     </div>
-    <div>
-        <label for="username">Username:</label>
-        <input type="text" id="username" name="username" required>
-    </div>
-    <div>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit">Login</button>
-</form>
-<h3>Social Login</h3>
-<a href="/oauth2/authorization/google">
-    <button class="social-button google-button">Login with Google</button>
-</a>
-<a href="/oauth2/authorization/kakao">
-    <button class="social-button kakao-button">Login with Kakao</button>
-</a>
-
-<a href="/register">Register</a>
+</div>
 </body>
 </html>

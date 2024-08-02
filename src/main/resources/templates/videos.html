@@ -1,15 +1,15 @@
-<!--videos.html-->
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>Video Gallery</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #fafafa;
+            background-color: #121212;
+            color: #ffffff;
         }
         .video-grid {
             display: grid;
@@ -17,15 +17,15 @@
             gap: 20px;
         }
         .video-item {
-            border: 1px solid #dbdbdb;
-            background-color: #fff;
+            border: 1px solid #2c2c2c;
+            background-color: #1c1c1c;
             border-radius: 3px;
             overflow: hidden;
         }
         .video-container {
             position: relative;
             width: 100%;
-            padding-top: 100%; /* 1:1 Aspect Ratio */
+            padding-top: 100%;
         }
         .video-container video {
             position: absolute;
@@ -36,92 +36,109 @@
             object-fit: cover;
         }
         .video-info {
-            padding: 10px;
+            padding: 15px;
         }
         .video-title {
-            margin: 0;
+            margin: 0 0 10px 0;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
         }
         .video-user {
-            color: #8e8e8e;
+            color: #a8a8a8;
             font-size: 14px;
-            margin-top: 5px;
+            margin-bottom: 10px;
         }
         .upload-button {
             display: inline-block;
-            background-color: #0095f6;
+            background-color: #3897f0;
             color: white;
             padding: 10px 20px;
             text-decoration: none;
             border-radius: 5px;
             margin-bottom: 20px;
+            transition: background-color 0.3s;
         }
-        .like-button {
-            background-color: #0095f6;
+        .upload-button:hover {
+            background-color: #1877f2;
+        }
+        .like-button, .comment-like-button, .show-more-button, .follow-button {
+            background-color: #3897f0;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
-        .like-count {
+        .like-button:hover, .comment-like-button:hover, .show-more-button:hover, .follow-button:hover {
+            background-color: #1877f2;
+        }
+        .like-count, .comment-like-count {
             margin-left: 10px;
+            color: #a8a8a8;
         }
         .comment-form {
-            margin-top: 10px;
+            margin-top: 15px;
         }
         .comment-input {
-            width: 80%;
-            padding: 5px;
+            width: calc(100% - 110px);
+            padding: 8px;
+            border: 1px solid #2c2c2c;
+            background-color: #2c2c2c;
+            color: #ffffff;
+            border-radius: 5px;
         }
         .comment-submit {
-            background-color: #0095f6;
+            background-color: #3897f0;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 15px;
             border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .comment-submit:hover {
+            background-color: #1877f2;
         }
         .comment-section {
-            margin-top: 10px;
+            margin-top: 15px;
         }
         .comment {
-            border: 1px solid #dbdbdb;
+            border: 1px solid #2c2c2c;
+            background-color: #2c2c2c;
             padding: 10px;
             margin-bottom: 10px;
-        }
-        .comment-like-button {
-            background-color: #0095f6;
-            color: white;
-            border: none;
-            padding: 5px 10px;
             border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
         }
         .show-more-button {
-            background-color: #0095f6;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
+            display: block;
+            width: 100%;
             margin-top: 10px;
         }
-        .follow-button {
-            background-color: #0095f6;
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #3897f0;
             color: white;
             border: none;
-            padding: 5px 10px;
+            padding: 10px 20px;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            z-index: 1000;
+        }
+        .home-button:hover {
+            background-color: #1877f2;
         }
     </style>
 </head>
 <body>
 <a href="/upload" class="upload-button">Upload New Video</a>
+<a href="/home" class="home-button">Back to Home</a>
 
 <div class="video-grid">
     <div th:each="video : ${videos}" class="video-item">
