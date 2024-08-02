@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class FollowServiceImpl implements FollowService {
@@ -53,9 +53,10 @@ public class FollowServiceImpl implements FollowService {
 
     @Override
     public List<User> getFollowing(User user) {
-        return followRepository.findByFollower(user).stream()
+        List<Follow> followings = followRepository.findByFollower(user);
+        return followings.stream()
                 .map(Follow::getFollowed)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -66,5 +67,17 @@ public class FollowServiceImpl implements FollowService {
     @Override
     public long getFollowingCount(User user) {
         return followRepository.countByFollower(user);
+    }
+
+    @Override
+    @Transactional
+    public boolean toggleFollow(User follower, User followed) {
+        if (isFollowing(follower, followed)) {
+            unfollowUser(follower, followed);
+            return false;
+        } else {
+            followUser(follower, followed);
+            return true;
+        }
     }
 }

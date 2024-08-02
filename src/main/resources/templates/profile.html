@@ -18,12 +18,45 @@
             padding: 10px;
             margin-bottom: 10px;
         }
+        .follow-list {
+            display: flex;
+            justify-content: space-between;
+        }
+        .follow-column {
+            width: 48%;
+        }
+        .user-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .user-list li {
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
 <h1>My Profile</h1>
 <p>Username: <span th:text="${user.username}">username</span></p>
 <p>Email: <span th:text="${user.email}">email@example.com</span></p>
+
+<div class="follow-list">
+    <div class="follow-column">
+        <h2>Followers (<span th:text="${followerCount}">0</span>)</h2>
+        <ul class="user-list">
+            <li th:each="follower : ${followers}">
+                <a th:href="@{/user/{username}/videos(username=${follower.username})}" th:text="${follower.username}">Follower Username</a>
+            </li>
+        </ul>
+    </div>
+    <div class="follow-column">
+        <h2>Following (<span th:text="${followingCount}">0</span>)</h2>
+        <ul class="user-list">
+            <li th:each="following : ${following}">
+                <a th:href="@{/user/{username}/videos(username=${following.username})}" th:text="${following.username}">Following Username</a>
+            </li>
+        </ul>
+    </div>
+</div>
 
 <h2>My Videos</h2>
 <div th:if="${userVideos.empty}">

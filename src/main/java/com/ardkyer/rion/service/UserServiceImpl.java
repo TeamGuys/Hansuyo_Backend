@@ -2,11 +2,12 @@ package com.ardkyer.rion.service;
 
 import com.ardkyer.rion.entity.*;
 import com.ardkyer.rion.repository.*;
+import com.ardkyer.rion.dto.UserRegistrationDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,6 +45,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public User findById(Long id) {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("User not found: " + id));
+    }
+
+    @Override
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
@@ -68,5 +75,14 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    public User registerNewUser(UserRegistrationDto registrationDto) {
+        User user = new User();
+        user.setUsername(registrationDto.getUsername());
+        user.setEmail(registrationDto.getEmail());
+        user.setPasswordHash(passwordEncoder.encode(registrationDto.getPassword()));
+        user.setRoles(Collections.singleton("ROLE_USER"));  // USER 역할 부여
+        return userRepository.save(user);
     }
 }

@@ -83,4 +83,14 @@ public class Video {
     public void setComments(Set<Comment> comments) {
         this.comments = (List<Comment>) comments;
     }
+
+    private boolean followedByCurrentUser;
+
+    public void setFollowedByCurrentUser(boolean followedByCurrentUser) {
+        this.followedByCurrentUser = followedByCurrentUser;
+    }
+
+    public boolean isFollowedByCurrentUser() {
+        return followedByCurrentUser;
+    }
 }

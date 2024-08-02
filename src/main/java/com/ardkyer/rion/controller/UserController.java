@@ -26,12 +26,14 @@ public class UserController {
     private final UserService userService;
     private final VideoService videoService;
     private final CommentService commentService;
+    private final FollowService followService;
 
     @Autowired
-    public UserController(UserService userService, VideoService videoService, CommentService commentService) {
+    public UserController(UserService userService, VideoService videoService, CommentService commentService, FollowService followService) {
         this.userService = userService;
         this.videoService = videoService;
         this.commentService = commentService;
+        this.followService = followService;
     }
 
     @PostMapping("/api/users/register")
@@ -96,6 +98,10 @@ public class UserController {
         List<Comment> userComments = commentService.getCommentsByUser(currentUser);
 
         model.addAttribute("user", currentUser);
+        model.addAttribute("followerCount", followService.getFollowerCount(currentUser));
+        model.addAttribute("followingCount", followService.getFollowingCount(currentUser));
+        model.addAttribute("followers", followService.getFollowers(currentUser));
+        model.addAttribute("following", followService.getFollowing(currentUser));
         model.addAttribute("userVideos", userVideos);
         model.addAttribute("likedVideos", likedVideos);
         model.addAttribute("userComments", userComments);
@@ -117,5 +123,17 @@ public class UserController {
         }
 
         return "redirect:/profile";
+    }
+
+    @GetMapping("/user/{username}/videos")
+    public String showUserVideos(@PathVariable String username, Model model) {
+        User user = userService.findByUsername(username);
+        if (user == null) {
+            return "error"; // 사용자를 찾을 수 없을 때 에러 페이지로 리다이렉트
+        }
+        List<Video> userVideos = videoService.getVideosByUser(user);
+        model.addAttribute("user", user);
+        model.addAttribute("userVideos", userVideos);
+        return "user-videos";
     }
 }

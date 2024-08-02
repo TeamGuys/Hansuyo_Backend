@@ -17,4 +17,6 @@ public interface FollowService {
     List<User> getFollowing(User user);
     long getFollowerCount(User user);
     long getFollowingCount(User user);
+    boolean toggleFollow(User follower, User followed);
 }
+

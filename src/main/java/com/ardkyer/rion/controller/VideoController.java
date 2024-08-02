@@ -4,10 +4,7 @@ import com.amazonaws.services.s3.model.S3Object;
 import com.ardkyer.rion.entity.Comment;
 import com.ardkyer.rion.entity.Video;
 import com.ardkyer.rion.entity.User;
-import com.ardkyer.rion.service.CommentService;
-import com.ardkyer.rion.service.VideoService;
-import com.ardkyer.rion.service.UserService;
-import com.ardkyer.rion.service.LikeService;
+import com.ardkyer.rion.service.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -48,6 +45,9 @@ public class VideoController {
     @Autowired
     private CommentService commentService;
 
+    @Autowired
+    private FollowService followService;
+
     @GetMapping
     @Operation(summary = "List all videos", description = "Retrieves a list of all videos with comments")
     public String listVideos(Model model, Authentication authentication) {
@@ -60,9 +60,13 @@ public class VideoController {
             video.setLikeCount(likeService.getLikeCountForVideo(video));
             if (currentUser != null) {
                 video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
+                // Add follow status
+                boolean isFollowing = followService.isFollowing(currentUser, video.getUser());
+                video.setFollowedByCurrentUser(isFollowing);
             }
         }
         model.addAttribute("videos", videos);
+        model.addAttribute("currentUser", Optional.ofNullable(currentUser));
         return "videos";
     }
 

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title th:text="${user.username} + '의 동영상'">User's Videos</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<h1 th:text="${user.username} + '의 동영상'">User's Videos</h1>
+<div th:if="${userVideos.empty}">
+    <p>이 사용자가 업로드한 동영상이 없습니다.</p>
+</div>
+<div th:each="video : ${userVideos}" class="video-item">
+    <h3 th:text="${video.title}">Video Title</h3>
+    <p th:text="${video.description}">Video Description</p>
+    <video width="320" height="240" controls>
+        <source th:src="@{'/videos/file/' + ${video.videoUrl}}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+</div>
+<a href="/profile">프로필로 돌아가기</a>
+</body>
+</html>
