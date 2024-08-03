@@ -28,16 +28,22 @@ public class VideoServiceImpl implements VideoService {
     private final CommentRepository commentRepository;
     private final HashtagRepository hashtagRepository;
     private final AmazonS3 amazonS3Client;
+    private LikeService likeService;
 
     @Value("ardkyerspring1")
     private String bucketName;
 
     @Autowired
-    public VideoServiceImpl(VideoRepository videoRepository, CommentRepository commentRepository, HashtagRepository hashtagRepository, AmazonS3 amazonS3Client) {
+    public VideoServiceImpl(VideoRepository videoRepository,
+                            CommentRepository commentRepository,
+                            HashtagRepository hashtagRepository,
+                            AmazonS3 amazonS3Client,
+                            LikeService likeService) {
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
         this.hashtagRepository = hashtagRepository;
         this.amazonS3Client = amazonS3Client;
+        this.likeService = likeService;
     }
 
     @Override
@@ -120,11 +126,6 @@ public class VideoServiceImpl implements VideoService {
         }
     }
 
-    @Override
-    public List<Video> getAllVideos() {
-        return videoRepository.findAll();
-    }
-
     // You might want to add this method to increment view count
     @Transactional
     public void incrementViewCount(Long videoId) {
@@ -184,5 +185,21 @@ public class VideoServiceImpl implements VideoService {
                     newHashtag.setName(name);
                     return hashtagRepository.save(newHashtag);
                 }));
+    }
+
+    @Override
+    public List<Video> getAllVideosOrderByLikeCountDesc() {
+        List<Video> videos = videoRepository.findAll();
+        for (Video video : videos) {
+            video.setLikeCount(likeService.getLikeCountForVideo(video));
+        }
+        return videos.stream()
+                .sorted(Comparator.comparingLong(Video::getLikeCount).reversed())
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Video> getAllVideos() {
+        return getAllVideosOrderByLikeCountDesc();  // 좋아요 수로 정렬된 비디오 목록을 반환
     }
 }

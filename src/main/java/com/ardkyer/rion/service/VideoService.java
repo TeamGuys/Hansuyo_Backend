@@ -27,4 +27,5 @@ public interface VideoService {
     void saveHashtagsFromDescription(String description);
     List<Video> searchVideos(String query);
     List<Video> searchVideosByHashtags(Set<String> hashtags);
+    List<Video> getAllVideosOrderByLikeCountDesc();
 }

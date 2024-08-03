@@ -52,37 +52,12 @@ public class VideoController {
     private FollowService followService;
 
     @GetMapping
-    @Operation(summary = "List all videos", description = "Retrieves a list of all videos with comments")
+    @Operation(summary = "List all videos", description = "Retrieves a list of all videos with comments, sorted by like count")
     public String listVideos(Model model, Authentication authentication) {
-        List<Video> videos = videoService.getAllVideosWithComments();
-        User currentUser = null;
-        if (authentication != null) {
-            currentUser = userService.findByUsername(authentication.getName());
-        }
-        for (Video video : videos) {
-            video.setLikeCount(likeService.getLikeCountForVideo(video));
-            if (currentUser != null) {
-                video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
-                // Add follow status
-                boolean isFollowing = followService.isFollowing(currentUser, video.getUser());
-                video.setFollowedByCurrentUser(isFollowing);
-            }
-        }
+        List<Video> videos = videoService.getAllVideosOrderByLikeCountDesc();
+        prepareVideosForDisplay(videos, authentication);
         model.addAttribute("videos", videos);
-        model.addAttribute("currentUser", Optional.ofNullable(currentUser));
-        return "videos";
-    }
-
-    @GetMapping("/videos")
-    @Operation(summary = "Get all videos", description = "Retrieves a list of all videos")
-    public String getVideos(Model model, Authentication authentication) {
-        List<Video> videos = videoService.getAllVideos();
-        Optional<User> currentUser = Optional.empty();
-        if (authentication != null) {
-            currentUser = userService.getUserByUsername(authentication.getName());
-        }
-        model.addAttribute("videos", videos);
-        model.addAttribute("currentUser", currentUser);
+        model.addAttribute("currentUser", getCurrentUser(authentication));
         return "videos";
     }
 
@@ -92,11 +67,7 @@ public class VideoController {
         Optional<Video> videoOptional = videoService.getVideoById(id);
         if (videoOptional.isPresent()) {
             Video video = videoOptional.get();
-            video.setLikeCount(likeService.getLikeCountForVideo(video));
-            if (authentication != null) {
-                User currentUser = userService.findByUsername(authentication.getName());
-                video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
-            }
+            prepareVideoForDisplay(video, authentication);
             model.addAttribute("video", video);
             return "watchVideo";
         } else {
@@ -129,7 +100,7 @@ public class VideoController {
     public String handleFileUpload(@RequestParam("title") String title,
                                    @RequestParam("description") String description,
                                    @RequestParam("video") MultipartFile file,
-                                   @RequestParam(value = "hashtags", required = false)String hashtags,
+                                   @RequestParam(value = "hashtags", required = false) String hashtags,
                                    Authentication authentication) throws IOException {
         User currentUser = userService.findByUsername(authentication.getName());
 
@@ -138,18 +109,7 @@ public class VideoController {
         video.setDescription(description);
         video.setUser(currentUser);
 
-        // description에서 해시태그 추출
-        Set<String> hashtagSet = Arrays.stream(description.split(" "))
-                .map(String::trim)
-                .filter(tag -> tag.startsWith("#"))
-                .collect(Collectors.toSet());
-
-        // 추가적인 해시태그 파라미터가 있다면 추가
-        if (hashtags != null && !hashtags.trim().isEmpty()) {
-            hashtagSet.addAll(Arrays.stream(hashtags.split(","))
-                    .map(String::trim)
-                    .collect(Collectors.toSet()));
-        }
+        Set<String> hashtagSet = extractHashtags(description, hashtags);
 
         videoService.uploadVideo(video, file, hashtagSet);
 
@@ -181,20 +141,62 @@ public class VideoController {
     }
 
     @GetMapping("/detail/{id}")
-    @Operation(summary = "Get all videos", description = "Retrieves a list of all videos")
-    String detail(@PathVariable Long id, Model model,Authentication authentication) {
-
-        Optional<User> currentUser = Optional.empty();
-        if (authentication != null) {
-            currentUser = userService.getUserByUsername(authentication.getName());
+    @Operation(summary = "Get video details", description = "Retrieves details of a specific video")
+    public String detail(@PathVariable Long id, Model model, Authentication authentication) {
+        Optional<Video> videoOptional = videoService.getVideoById(id);
+        if (videoOptional.isPresent()) {
+            Video video = videoOptional.get();
+            prepareVideoForDisplay(video, authentication);
+            model.addAttribute("video", video);
+            model.addAttribute("currentUser", getCurrentUser(authentication));
+            return "detailPage";
+        } else {
+            return "redirect:/videos";
         }
-        Optional<Video> v = videoService.getVideoById(id);
-        System.out.println(v.get().getTitle());
-        model.addAttribute("videos",v.get());
-        model.addAttribute("currentUser", currentUser);
+    }
 
+    private void prepareVideosForDisplay(List<Video> videos, Authentication authentication) {
+        User currentUser = getCurrentUser(authentication).orElse(null);
+        for (Video video : videos) {
+            if (currentUser != null) {
+                video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
+                video.setFollowedByCurrentUser(followService.isFollowing(currentUser, video.getUser()));
+            }
+        }
+    }
 
+    private void prepareVideoForDisplay(Video video, Authentication authentication) {
+        User currentUser = getCurrentUser(authentication).orElse(null);
+        prepareVideoForDisplay(video, currentUser);
+    }
 
-        return "detailPage";
+    private void prepareVideoForDisplay(Video video, User currentUser) {
+        video.setLikeCount(likeService.getLikeCountForVideo(video));
+        if (currentUser != null) {
+            video.setLikedByCurrentUser(likeService.hasUserLikedVideo(currentUser, video));
+            video.setFollowedByCurrentUser(followService.isFollowing(currentUser, video.getUser()));
+        }
+    }
+
+    private Optional<User> getCurrentUser(Authentication authentication) {
+        if (authentication != null) {
+            return userService.getUserByUsername(authentication.getName());
+        }
+        return Optional.empty();
+    }
+
+    private Set<String> extractHashtags(String description, String additionalHashtags) {
+        Set<String> hashtagSet = Arrays.stream(description.split(" "))
+                .map(String::trim)
+                .filter(tag -> tag.startsWith("#"))
+                .collect(Collectors.toSet());
+
+        if (additionalHashtags != null && !additionalHashtags.trim().isEmpty()) {
+            hashtagSet.addAll(Arrays.stream(additionalHashtags.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toSet()));
+        }
+
+        return hashtagSet;
     }
 }

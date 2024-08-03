@@ -174,13 +174,17 @@
                     Your browser does not support the video tag.
                 </video>
             </a>
-                <button th:if="${currentUser.isPresent() and video.user.id != currentUser.get().id}"
-                        th:attr="data-user-id=${video.user.id}"
-                        th:onclick="'toggleFollow(' + ${video.user.id} + ')'"
-                        class="follow-button">
-                    Follow
-                </button>
-            </div>
+            <button th:if="${currentUser.isPresent() and video.user.id != currentUser.get().id}"
+                    th:attr="data-user-id=${video.user.id}"
+                    th:onclick="'toggleFollow(' + ${video.user.id} + ')'"
+                    class="follow-button">
+                Follow
+            </button>
+        </div>
+        <div class="video-info">
+            <h3 class="video-title" th:text="${video.title}">Video Title</h3>
+            <p class="video-user" th:text="${video.user.username}">Username</p>
+            <p class="like-count" th:text="${video.likeCount} + ' likes'">0 likes</p>
         </div>
     </div>
 </div>
