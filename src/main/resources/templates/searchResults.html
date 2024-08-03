@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Search Results</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fafafa;
+        }
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+        }
+        .search-button {
+            padding: 10px 20px;
+            border: 1px solid #dbdbdb;
+            border-left: none;
+            background-color: #0095f6;
+            color: white;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+        .recent-searches, .exercise-grid {
+            margin-bottom: 20px;
+        }
+        .recent-searches h2, .exercise-grid h2 {
+            margin-top: 0;
+        }
+        .recent-search-list, .exercise-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .recent-search-item, .exercise-item {
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 5px;
+            background-color: #fff;
+            text-align: center;
+            cursor: pointer;
+        }
+        .recent-search-item a, .exercise-item a {
+            text-decoration: none;
+            color: #0095f6;
+            font-size: 16px;
+            display: block;
+        }
+        .delete-button {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            margin-top: 5px;
+        }
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .video-item {
+            border: 1px solid #dbdbdb;
+            background-color: #fff;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .video-container {
+            position: relative;
+            width: 100%;
+            padding-top: 100%;
+        }
+        .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .video-info {
+            padding: 10px;
+        }
+        .video-title {
+            margin: 0;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .video-user {
+            color: #8e8e8e;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+<div class="search-container">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
+    <button class="search-button" onclick="performSearch()">Search</button>
+</div>
+
+<div class="recent-searches">
+    <h2>Recent Searches</h2>
+    <div class="recent-search-list">
+        <div class="recent-search-item" th:each="search : ${recentSearches}">
+            <a th:href="@{'/search/results?query=' + ${search.keyword}}"
+               th:text="${search.keyword}">Recent Search</a>
+            <form th:action="@{'/search/recent/delete'}" method="post" style="display:inline;">
+                <input type="hidden" name="query" th:value="${search.keyword}" />
+                <button type="submit" class="delete-button">Delete</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<h2>Exercise List</h2>
+<div class="exercise-grid">
+    <div class="exercise-item" th:each="exercise : ${exercises}">
+        <a th:href="@{'/search/results?query=' + ${exercise.name}}"
+           th:text="${exercise.name}">Exercise Name</a>
+    </div>
+</div>
+
+<div class="video-grid" id="searchResults">
+    <div th:each="video : ${videos}" class="video-item">
+        <div class="video-container">
+            <video th:id="'video-' + ${video.id}" loop muted>
+                <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="video-info">
+            <h3 class="video-title" th:text="${video?.title}"></h3>
+            <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('focus', function() {
+            // searchResults 페이지에서는 포커스 시 아무 동작도 하지 않음
+        });
+    });
+
+    function performSearch() {
+        const query = document.getElementById('searchInput').value;
+        window.location.href = '/search/results?query=' + encodeURIComponent(query);
+    }
+</script>
+</body>
+</html>

@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <title>Video Gallery</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #121212;
-            color: #ffffff;
+            background-color: #fafafa;
         }
         .video-grid {
             display: grid;
@@ -17,15 +16,15 @@
             gap: 20px;
         }
         .video-item {
-            border: 1px solid #2c2c2c;
-            background-color: #1c1c1c;
+            border: 1px solid #dbdbdb;
+            background-color: #fff;
             border-radius: 3px;
             overflow: hidden;
         }
         .video-container {
             position: relative;
             width: 100%;
-            padding-top: 100%;
+            padding-top: 100%; /* 1:1 Aspect Ratio */
         }
         .video-container video {
             position: absolute;
@@ -36,83 +35,77 @@
             object-fit: cover;
         }
         .video-info {
-            padding: 15px;
+            padding: 10px;
         }
         .video-title {
-            margin: 0 0 10px 0;
+            margin: 0;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: bold;
         }
         .video-user {
-            color: #a8a8a8;
+            color: #8e8e8e;
             font-size: 14px;
-            margin-bottom: 10px;
+            margin-top: 5px;
         }
         .upload-button {
             display: inline-block;
-            background-color: #3897f0;
+            background-color: #0095f6;
             color: white;
             padding: 10px 20px;
             text-decoration: none;
             border-radius: 5px;
             margin-bottom: 20px;
-            transition: background-color 0.3s;
         }
-        .upload-button:hover {
-            background-color: #1877f2;
-        }
-        .like-button, .comment-like-button, .show-more-button, .follow-button {
-            background-color: #3897f0;
+        .like-button {
+            background-color: #0095f6;
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
-        .like-button:hover, .comment-like-button:hover, .show-more-button:hover, .follow-button:hover {
-            background-color: #1877f2;
-        }
-        .like-count, .comment-like-count {
+        .like-count {
             margin-left: 10px;
-            color: #a8a8a8;
         }
         .comment-form {
-            margin-top: 15px;
+            margin-top: 10px;
         }
         .comment-input {
-            width: calc(100% - 110px);
-            padding: 8px;
-            border: 1px solid #2c2c2c;
-            background-color: #2c2c2c;
-            color: #ffffff;
-            border-radius: 5px;
+            width: 80%;
+            padding: 5px;
         }
         .comment-submit {
-            background-color: #3897f0;
+            background-color: #0095f6;
             color: white;
             border: none;
-            padding: 8px 15px;
+            padding: 5px 10px;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
-        }
-        .comment-submit:hover {
-            background-color: #1877f2;
         }
         .comment-section {
-            margin-top: 15px;
+            margin-top: 10px;
         }
         .comment {
-            border: 1px solid #2c2c2c;
-            background-color: #2c2c2c;
+            border: 1px solid #dbdbdb;
             padding: 10px;
             margin-bottom: 10px;
+        }
+        .comment-like-button {
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 5px 10px;
             border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
         }
         .show-more-button {
-            display: block;
-            width: 100%;
+            background-color: #0095f6;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
             margin-top: 10px;
         }
         .search-form {
@@ -136,50 +129,43 @@
             border-radius: 0 5px 5px 0;
             cursor: pointer;
         }
-        .home-button {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background-color: #3897f0;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: background-color 0.3s;
-            z-index: 1000;
-        }
-        .home-button:hover {
-            background-color: #1877f2;
-        }
+
     </style>
 </head>
 <body>
-<a href="/upload" class="upload-button">Upload New Video</a>
-<form class="search-form" action="/search/results" method="get">
-    <input type="text" name="query" class="search-input" placeholder="Search...">
-    <button type="submit" class="search-button">Search</button>
-</form>
-<a href="/home" class="home-button">Back to Home</a>
+
+
 
 <div class="video-grid">
-    <div th:each="video : ${videos}" class="video-item">
+    <div th:each="video : ${videos}" class="video-item" >
         <div class="video-container">
-            <a th:href="@{'/videos/detail/' + ${video.id}}">
-                <video th:id="'video-' + ${video.id}" loop muted>
-                    <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
-                    Your browser does not support the video tag.
-                </video>
-            </a>
-                <button th:if="${currentUser.isPresent() and video.user.id != currentUser.get().id}"
-                        th:attr="data-user-id=${video.user.id}"
-                        th:onclick="'toggleFollow(' + ${video.user.id} + ')'"
-                        class="follow-button">
-                    Follow
-                </button>
+            <video th:id="'video-' + ${video.id}" loop muted>
+                <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
+        <div class="video-info">
+            <h3 class="video-title" th:text="${video?.title}"></h3>
+            <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
+            <button th:id="'like-button-' + ${video?.id}" class="like-button" th:onclick="'likeVideo(' + ${video?.id} + ')'">Like</button>
+            <span th:id="'like-count-' + ${video?.id}" class="like-count" th:text="${video?.likeCount} + ' likes'"></span>
+            <div class="comment-section">
+                <h4>Comments:</h4>
+                <div th:id="'comments-' + ${video.id}">
+                    <div th:each="comment : ${video.comments}" th:fragment="commentItem" class="comment" th:data-comment-id="${comment?.id}">
+                        <p th:text="${comment?.content}">Comment content</p>
+                        <small th:text="${'By ' + comment?.user?.username}">By Username</small>
+                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="comment-like-button">
+                            <span th:text="${currentUser != null and currentUser.isPresent() and comment != null and comment.isLikedByCurrentUser(currentUser.get()) ? 'Unlike' : 'Like'}">Like</span>
+                        </button>
+                        <span class="comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
+                    </div>
+                </div>
+                <button th:onclick="'loadMoreComments(' + ${video.id} + ')'" class="show-more-button">Load more comments</button>
+                <form th:id="'comment-form-' + ${video.id}" class="comment-form">
+                    <input type="text" th:id="'comment-input-' + ${video.id}" class="comment-input" placeholder="Add a comment...">
+                    <button type="submit" class="comment-submit">Post</button>
+                </form>
             </div>
         </div>
     </div>
@@ -355,60 +341,6 @@
             })
             .catch(error => console.error('Error:', error));
     }
-
-    function toggleFollow(userId) {
-        fetch('/api/follows?followedId=' + userId, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateAllFollowButtons(userId, data.isFollowing);
-                } else {
-                    console.error('Follow action failed:', data.message);
-                    alert('Failed to follow/unfollow: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
-    }
-
-    function updateAllFollowButtons(userId, isFollowing) {
-        const followButtons = document.querySelectorAll('.follow-button[data-user-id="' + userId + '"]');
-        followButtons.forEach(button => {
-            button.textContent = isFollowing ? 'Unfollow' : 'Follow';
-        });
-    }
-
-    // 페이지 로드 시 팔로우 상태 확인
-    function checkFollowStatus(userId) {
-        fetch(`/api/follows/check?followedId=${userId}`)
-            .then(response => response.json())
-            .then(data => {
-                updateAllFollowButtons(userId, data.isFollowing);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    // 페이지 로드 시 모든 팔로우 버튼 상태 확인
-    document.addEventListener('DOMContentLoaded', function() {
-        const userIds = new Set();
-        const followButtons = document.querySelectorAll('.follow-button');
-        followButtons.forEach(button => {
-            const userId = button.getAttribute('data-user-id');
-            if (userId) {
-                userIds.add(userId);
-            }
-        });
-        userIds.forEach(userId => {
-            checkFollowStatus(userId);
-        });
-    });
 
     function loadMoreComments(videoId) {
         const commentsElement = document.getElementById(`comments-${videoId}`);

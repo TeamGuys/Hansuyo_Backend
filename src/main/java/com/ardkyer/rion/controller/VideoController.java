@@ -24,9 +24,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/videos")
@@ -126,6 +129,7 @@ public class VideoController {
     public String handleFileUpload(@RequestParam("title") String title,
                                    @RequestParam("description") String description,
                                    @RequestParam("video") MultipartFile file,
+                                   @RequestParam(value = "hashtags", required = false)String hashtags,
                                    Authentication authentication) throws IOException {
         User currentUser = userService.findByUsername(authentication.getName());
 
@@ -133,7 +137,22 @@ public class VideoController {
         video.setTitle(title);
         video.setDescription(description);
         video.setUser(currentUser);
-        videoService.uploadVideo(video, file);
+
+        // description에서 해시태그 추출
+        Set<String> hashtagSet = Arrays.stream(description.split(" "))
+                .map(String::trim)
+                .filter(tag -> tag.startsWith("#"))
+                .collect(Collectors.toSet());
+
+        // 추가적인 해시태그 파라미터가 있다면 추가
+        if (hashtags != null && !hashtags.trim().isEmpty()) {
+            hashtagSet.addAll(Arrays.stream(hashtags.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toSet()));
+        }
+
+        videoService.uploadVideo(video, file, hashtagSet);
+
         return "redirect:/videos";
     }
 
@@ -159,5 +178,23 @@ public class VideoController {
         video.setId(id);
         Optional<Comment> topComment = commentService.getTopCommentForVideo(video);
         return topComment.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/detail/{id}")
+    @Operation(summary = "Get all videos", description = "Retrieves a list of all videos")
+    String detail(@PathVariable Long id, Model model,Authentication authentication) {
+
+        Optional<User> currentUser = Optional.empty();
+        if (authentication != null) {
+            currentUser = userService.getUserByUsername(authentication.getName());
+        }
+        Optional<Video> v = videoService.getVideoById(id);
+        System.out.println(v.get().getTitle());
+        model.addAttribute("videos",v.get());
+        model.addAttribute("currentUser", currentUser);
+
+
+
+        return "detailPage";
     }
 }

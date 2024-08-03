@@ -17,6 +17,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class VideoServiceImpl implements VideoService {
@@ -24,21 +26,23 @@ public class VideoServiceImpl implements VideoService {
     @Autowired
     private VideoRepository videoRepository;
     private final CommentRepository commentRepository;
+    private final HashtagRepository hashtagRepository;
     private final AmazonS3 amazonS3Client;
 
     @Value("ardkyerspring1")
     private String bucketName;
 
     @Autowired
-    public VideoServiceImpl(VideoRepository videoRepository, CommentRepository commentRepository, AmazonS3 amazonS3Client) {
+    public VideoServiceImpl(VideoRepository videoRepository, CommentRepository commentRepository, HashtagRepository hashtagRepository, AmazonS3 amazonS3Client) {
         this.videoRepository = videoRepository;
         this.commentRepository = commentRepository;
+        this.hashtagRepository = hashtagRepository;
         this.amazonS3Client = amazonS3Client;
     }
 
     @Override
     @Transactional
-    public Video uploadVideo(Video video, MultipartFile file) throws IOException {
+    public Video uploadVideo(Video video, MultipartFile file, Set<String> hashtagNames) throws IOException {
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
 
         ObjectMetadata metadata = new ObjectMetadata();
@@ -48,7 +52,24 @@ public class VideoServiceImpl implements VideoService {
         amazonS3Client.putObject(bucketName, fileName, file.getInputStream(), metadata);
 
         video.setVideoUrl(fileName);
-        return videoRepository.save(video);
+
+        Set<Hashtag> hashtags = convertNamesToHashtags(hashtagNames);
+        video.setHashtags(hashtags);
+
+        video = videoRepository.save(video);
+
+        return video;
+    }
+
+    private Set<Hashtag> convertNamesToHashtags(Set<String> hashtagNames) {
+        return hashtagNames.stream()
+                .map(name -> hashtagRepository.findByName(name)
+                        .orElseGet(() -> {
+                            Hashtag newHashtag = new Hashtag();
+                            newHashtag.setName(name);
+                            return hashtagRepository.save(newHashtag);
+                        }))
+                .collect(Collectors.toSet());
     }
 
     @Override
@@ -132,5 +153,36 @@ public class VideoServiceImpl implements VideoService {
             video.setComments(new HashSet<>(commentRepository.findTop5ByVideoOrderByLikeCountDescCreatedAtDesc(video, topFiveComments)));
         }
         return videos;
+    }
+
+    @Override
+    public void saveHashtagsFromDescription(String description) {
+        if (description != null && !description.trim().isEmpty()) {
+            Set<String> hashtags = Arrays.stream(description.split(" "))
+                    .map(String::trim)
+                    .filter(tag -> tag.startsWith("#"))
+                    .collect(Collectors.toSet());
+
+            saveHashtags(hashtags);
+        }
+    }
+
+    @Override
+    public List<Video> searchVideos(String query) {
+        return videoRepository.findByHashtagsNameContainingOrUserUsernameContaining(query, query);
+    }
+
+    @Override
+    public List<Video> searchVideosByHashtags(Set<String> hashtags) {
+        return videoRepository.findByHashtagsIn(hashtags);
+    }
+
+    private void saveHashtags(Set<String> hashtags) {
+        hashtags.forEach(name -> hashtagRepository.findByName(name)
+                .orElseGet(() -> {
+                    Hashtag newHashtag = new Hashtag();
+                    newHashtag.setName(name);
+                    return hashtagRepository.save(newHashtag);
+                }));
     }
 }
