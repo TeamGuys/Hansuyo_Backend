@@ -1,4 +1,3 @@
-<!--videos.html-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -109,10 +108,38 @@
             cursor: pointer;
             margin-top: 10px;
         }
+        .search-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 300px;
+            padding: 10px;
+            border: 1px solid #dbdbdb;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+        }
+        .search-button {
+            padding: 10px 20px;
+            border: 1px solid #dbdbdb;
+            border-left: none;
+            background-color: #0095f6;
+            color: white;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+        }
+
     </style>
 </head>
 <body>
+
 <a href="/upload" class="upload-button">Upload New Video</a>
+
+<form class="search-form" action="/search/results" method="get">
+    <input type="text" name="query" class="search-input" placeholder="Search...">
+    <button type="submit" class="search-button">Search</button>
+</form>
 
 <div class="video-grid">
     <div th:each="video : ${videos}" class="video-item">
@@ -151,6 +178,11 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const searchInput = document.querySelector('.search-input');
+        searchInput.addEventListener('focus', function() {
+            window.location.href = '/search/results';
+        });
+
         const videos = document.querySelectorAll('video');
 
         const observerOptions = {

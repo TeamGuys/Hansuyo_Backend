@@ -28,8 +28,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/videos")
@@ -122,6 +125,7 @@ public class VideoController {
     public String handleFileUpload(@RequestParam("title") String title,
                                    @RequestParam("description") String description,
                                    @RequestParam("video") MultipartFile file,
+                                   @RequestParam(value = "hashtags", required = false)String hashtags,
                                    Authentication authentication) throws IOException {
         User currentUser = userService.findByUsername(authentication.getName());
 
@@ -129,7 +133,21 @@ public class VideoController {
         video.setTitle(title);
         video.setDescription(description);
         video.setUser(currentUser);
-        videoService.uploadVideo(video, file);
+
+        // description에서 해시태그 추출
+        Set<String> hashtagSet = Arrays.stream(description.split(" "))
+                .map(String::trim)
+                .filter(tag -> tag.startsWith("#"))
+                .collect(Collectors.toSet());
+
+        // 추가적인 해시태그 파라미터가 있다면 추가
+        if (hashtags != null && !hashtags.trim().isEmpty()) {
+            hashtagSet.addAll(Arrays.stream(hashtags.split(","))
+                    .map(String::trim)
+                    .collect(Collectors.toSet()));
+        }
+
+        videoService.uploadVideo(video, file, hashtagSet);
         return "redirect:/videos";
     }
 
