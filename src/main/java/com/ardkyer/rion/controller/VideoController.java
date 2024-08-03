@@ -174,4 +174,23 @@ public class VideoController {
         Optional<Comment> topComment = commentService.getTopCommentForVideo(video);
         return topComment.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/detail/{id}")
+    @Operation(summary = "Get all videos", description = "Retrieves a list of all videos")
+    String detail(@PathVariable Long id, Model model,Authentication authentication) {
+
+        Optional<User> currentUser = Optional.empty();
+        if (authentication != null) {
+            currentUser = userService.getUserByUsername(authentication.getName());
+        }
+        Optional<Video> v = videoService.getVideoById(id);
+        System.out.println(v.get().getTitle());
+        model.addAttribute("videos",v.get());
+        model.addAttribute("currentUser", currentUser);
+
+
+
+        return "detailPage";
+    }
+
 }

@@ -142,37 +142,16 @@
 </form>
 
 <div class="video-grid">
-    <div th:each="video : ${videos}" class="video-item">
+    <div th:each="video : ${videos}" class="video-item" >
         <div class="video-container">
-            <video th:id="'video-' + ${video.id}" loop muted>
-                <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+            <a th:href="@{'/videos/detail/' + ${video.id}}">
+                <video th:id="'video-' + ${video.id}" loop muted>
+                    <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </a>
         </div>
-        <div class="video-info">
-            <h3 class="video-title" th:text="${video?.title}"></h3>
-            <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
-            <button th:id="'like-button-' + ${video?.id}" class="like-button" th:onclick="'likeVideo(' + ${video?.id} + ')'">Like</button>
-            <span th:id="'like-count-' + ${video?.id}" class="like-count" th:text="${video?.likeCount} + ' likes'"></span>
-            <div class="comment-section">
-                <h4>Comments:</h4>
-                <div th:id="'comments-' + ${video.id}">
-                    <div th:each="comment : ${video.comments}" th:fragment="commentItem" class="comment" th:data-comment-id="${comment?.id}">
-                        <p th:text="${comment?.content}">Comment content</p>
-                        <small th:text="${'By ' + comment?.user?.username}">By Username</small>
-                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="comment-like-button">
-                            <span th:text="${currentUser != null and currentUser.isPresent() and comment != null and comment.isLikedByCurrentUser(currentUser.get()) ? 'Unlike' : 'Like'}">Like</span>
-                        </button>
-                        <span class="comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
-                    </div>
-                </div>
-                <button th:onclick="'loadMoreComments(' + ${video.id} + ')'" class="show-more-button">Load more comments</button>
-                <form th:id="'comment-form-' + ${video.id}" class="comment-form">
-                    <input type="text" th:id="'comment-input-' + ${video.id}" class="comment-input" placeholder="Add a comment...">
-                    <button type="submit" class="comment-submit">Post</button>
-                </form>
-            </div>
-        </div>
+
     </div>
 </div>
 
