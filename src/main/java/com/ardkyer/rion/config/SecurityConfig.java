@@ -46,7 +46,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers("/v3/api-docs/**", "/v2/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/webjars/**").permitAll()
-                        .requestMatchers("/", "/home", "/register", "/login", "/profile/**", "/css/**", "/js/**").permitAll()
+                        .requestMatchers("/", "/home", "/register", "/login", "/profile/**","/reels/**", "/css/**", "/js/**").permitAll()
                         .requestMatchers("/api/follows/**").hasRole("USER")
                         .anyRequest().authenticated()
                 )

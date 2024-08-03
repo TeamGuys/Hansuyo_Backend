@@ -202,4 +202,11 @@ public class VideoServiceImpl implements VideoService {
     public List<Video> getAllVideos() {
         return getAllVideosOrderByLikeCountDesc();  // 좋아요 수로 정렬된 비디오 목록을 반환
     }
+
+    @Override
+    public List<Video> getRandomRecentVideos(int count) {
+        List<Video> recentVideos = videoRepository.findRecentVideos(PageRequest.of(0, 100));
+        Collections.shuffle(recentVideos);
+        return recentVideos.stream().limit(count).collect(Collectors.toList());
+    }
 }

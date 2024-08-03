@@ -1,6 +1,7 @@
 package com.ardkyer.rion.repository;
 
 import com.ardkyer.rion.entity.*;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,6 +12,8 @@ import java.util.Set;
 
 @Repository
 public interface VideoRepository extends JpaRepository<Video, Long> {
+    @Query("SELECT v FROM Video v ORDER BY v.createdAt DESC")
+    List<Video> findRecentVideos(Pageable pageable);
     List<Video> findByUserOrderByCreatedAtDesc(User user);
     List<Video> findTop10ByOrderByViewCountDesc();
     List<Video> findByLikesUser(User user);

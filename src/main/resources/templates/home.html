@@ -25,6 +25,9 @@
         .nav-menu {
             list-style-type: none;
             padding: 0;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
         }
         .nav-item {
             margin-bottom: 15px;
@@ -48,6 +51,18 @@
         .logout:hover {
             background-color: #4d4d4d;
         }
+        .reels {
+            background-color: #4a148c;
+        }
+        .reels:hover {
+            background-color: #6a1b9a;
+        }
+        .ranking {
+            background-color: #1565c0;
+        }
+        .ranking:hover {
+            background-color: #1976d2;
+        }
     </style>
 </head>
 <body>
@@ -57,6 +72,8 @@
         <ul class="nav-menu">
             <li class="nav-item"><a href="/videos" class="nav-link">Videos</a></li>
             <li class="nav-item"><a href="/upload" class="nav-link">Upload Video</a></li>
+            <li class="nav-item"><a href="/reels" class="nav-link reels">Reels</a></li>
+            <li class="nav-item"><a href="/ranking" class="nav-link ranking">Ranking</a></li>
             <li class="nav-item"><a href="/profile" class="nav-link">My Profile</a></li>
             <li class="nav-item"><a href="/logout" class="nav-link logout">Logout</a></li>
         </ul>
