@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.List;
@@ -208,5 +209,10 @@ public class VideoServiceImpl implements VideoService {
         List<Video> recentVideos = videoRepository.findRecentVideos(PageRequest.of(0, 100));
         Collections.shuffle(recentVideos);
         return recentVideos.stream().limit(count).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Video> getRecentVideosByUser(User user, int limit) {
+        return new ArrayList<>(videoRepository.findByUserOrderByCreatedAtDesc(user, PageRequest.of(0, limit)));
     }
 }

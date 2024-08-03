@@ -5,7 +5,9 @@ import com.ardkyer.rion.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,4 +20,6 @@ public interface UserService {
     List<User> getAllUsers();
     User updateUser(User user);
     void deleteUser(Long id);
+    List<User> getTopUsersByFollowerCount(int limit);
+    String updateUserAvatar(String username, MultipartFile file) throws IOException;
 }

@@ -5,7 +5,9 @@ import lombok.*;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -36,23 +38,35 @@ public class User implements Serializable {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "avatar_url")
+    private String avatarUrl;
+
     @ElementCollection(fetch = FetchType.EAGER)
     private Set<String> roles = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Video> videos;
+    private Set<Video> videos = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Comment> comments;
+    private Set<Comment> comments = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Like> likes;
+    private Set<Like> likes = new HashSet<>();
 
     @OneToMany(mappedBy = "follower", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Follow> following;
+    private Set<Follow> following = new HashSet<>();
 
     @OneToMany(mappedBy = "followed", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private Set<Follow> followers;
+    private Set<Follow> followers = new HashSet<>();
+
+    private String provider;
+    private String providerId;
+
+    @Transient
+    private boolean followedByCurrentUser;
+
+    @Transient
+    private List<Video> recentVideos = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {
@@ -60,11 +74,16 @@ public class User implements Serializable {
         updatedAt = LocalDateTime.now();
     }
 
-    private String provider;
-    private String providerId;
-
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public void setFollowedByCurrentUser(boolean followedByCurrentUser) {
+        this.followedByCurrentUser = followedByCurrentUser;
+    }
+
+    public void setRecentVideos(List<Video> recentVideos) {
+        this.recentVideos = recentVideos;
     }
 }

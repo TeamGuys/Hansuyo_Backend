@@ -29,4 +29,5 @@ public interface VideoService {
     List<Video> searchVideosByHashtags(Set<String> hashtags);
     List<Video> getAllVideosOrderByLikeCountDesc();
     List<Video> getRandomRecentVideos(int count);
+    List<Video> getRecentVideosByUser(User user, int limit);
 }

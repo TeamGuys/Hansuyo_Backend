@@ -101,6 +101,33 @@
         .home-button:hover {
             background-color: #1877f2;
         }
+        .avatar-container {
+            width: 150px;
+            height: 170px; /* 높이를 늘려 버튼이 완전히 보이도록 함 */
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        .avatar-image {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .avatar-upload {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: rgba(0,0,0,0.7);
+            color: white;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+            border-radius: 0 0 75px 75px; /* 하단 모서리만 둥글게 처리 */
+        }
+        .avatar-upload input[type="file"] {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -108,6 +135,13 @@
 <div class="container">
     <div class="profile-info">
         <h1>My Profile</h1>
+        <div class="avatar-container">
+            <img th:src="${user.avatarUrl != null ? user.avatarUrl : '/images/default-avatar.png'}" alt="Profile Avatar" class="avatar-image">
+            <label class="avatar-upload">
+                <input type="file" id="avatar-input" accept="image/*">
+                Change Avatar
+            </label>
+        </div>
         <p>Username: <span th:text="${user.username}">username</span></p>
         <p>Email: <span th:text="${user.email}">email@example.com</span></p>
     </div>
@@ -187,6 +221,31 @@
                 }
             });
     }
+
+    document.getElementById('avatar-input').addEventListener('change', function(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            fetch('/api/user/avatar', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.querySelector('.avatar-image').src = data.avatarUrl;
+                    } else {
+                        alert('Failed to upload avatar: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while uploading the avatar.');
+                });
+        }
+    });
 </script>
 
 </body>
