@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <title>Video Gallery</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #fafafa;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 20px;
+    }
+    .video-item {
+      border: 1px solid #dbdbdb;
+      background-color: #fff;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .video-container {
+      position: relative;
+      width: 100%;
+      padding-top: 100%; /* 1:1 Aspect Ratio */
+    }
+    .video-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .video-info {
+      padding: 10px;
+    }
+    .video-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .video-user {
+      color: #8e8e8e;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+    .upload-button {
+      display: inline-block;
+      background-color: #0095f6;
+      color: white;
+      padding: 10px 20px;
+      text-decoration: none;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+    .like-button {
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .like-count {
+      margin-left: 10px;
+    }
+    .comment-form {
+      margin-top: 10px;
+    }
+    .comment-input {
+      width: 80%;
+      padding: 5px;
+    }
+    .comment-submit {
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .comment-section {
+      margin-top: 10px;
+    }
+    .comment {
+      border: 1px solid #dbdbdb;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .comment-like-button {
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-left: 10px;
+    }
+    .show-more-button {
+      background-color: #0095f6;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .search-form {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .search-input {
+      width: 300px;
+      padding: 10px;
+      border: 1px solid #dbdbdb;
+      border-radius: 5px 0 0 5px;
+      outline: none;
+    }
+    .search-button {
+      padding: 10px 20px;
+      border: 1px solid #dbdbdb;
+      border-left: none;
+      background-color: #0095f6;
+      color: white;
+      border-radius: 0 5px 5px 0;
+      cursor: pointer;
+    }
+
+  </style>
+</head>
+<body>
+
+
+
+<div class="video-grid">
+  <div th:each="video : ${videos}" class="video-item" >
+    <div class="video-container">
+      <video th:id="'video-' + ${video.id}" loop muted>
+        <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+    <div class="video-info">
+      <h3 class="video-title" th:text="${video?.title}"></h3>
+      <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
+      <button th:id="'like-button-' + ${video?.id}" class="like-button" th:onclick="'likeVideo(' + ${video?.id} + ')'">Like</button>
+      <span th:id="'like-count-' + ${video?.id}" class="like-count" th:text="${video?.likeCount} + ' likes'"></span>
+      <div class="comment-section">
+        <h4>Comments:</h4>
+        <div th:id="'comments-' + ${video.id}">
+          <div th:each="comment : ${video.comments}" th:fragment="commentItem" class="comment" th:data-comment-id="${comment?.id}">
+            <p th:text="${comment?.content}">Comment content</p>
+            <small th:text="${'By ' + comment?.user?.username}">By Username</small>
+            <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="comment-like-button">
+              <span th:text="${currentUser != null and currentUser.isPresent() and comment != null and comment.isLikedByCurrentUser(currentUser.get()) ? 'Unlike' : 'Like'}">Like</span>
+            </button>
+            <span class="comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
+          </div>
+        </div>
+        <button th:onclick="'loadMoreComments(' + ${video.id} + ')'" class="show-more-button">Load more comments</button>
+        <form th:id="'comment-form-' + ${video.id}" class="comment-form">
+          <input type="text" th:id="'comment-input-' + ${video.id}" class="comment-input" placeholder="Add a comment...">
+          <button type="submit" class="comment-submit">Post</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-input');
+    searchInput.addEventListener('focus', function() {
+      window.location.href = '/search/results';
+    });
+
+    const videos = document.querySelectorAll('video');
+
+    const observerOptions = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.5
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.play();
+        } else {
+          entry.target.pause();
+        }
+      });
+    }, observerOptions);
+
+    videos.forEach(video => {
+      observer.observe(video);
+
+      video.addEventListener('click', function() {
+        if (this.paused) {
+          this.play();
+        } else {
+          this.pause();
+        }
+      });
+    });
+  });
+
+  function likeVideo(videoId) {
+    fetch('/api/likes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ videoId: videoId })
+    })
+            .then(response => response.json())
+            .then(data => {
+              const likeButton = document.getElementById('like-button-' + videoId);
+              const likeCount = document.getElementById('like-count-' + videoId);
+              if (data.liked) {
+                likeButton.textContent = 'Unlike';
+              } else {
+                likeButton.textContent = 'Like';
+              }
+              likeCount.textContent = data.likeCount + ' likes';
+            })
+            .catch(error => {
+              console.error('Error:', error);
+            });
+  }
+
+  function loadTopComment(videoId) {
+    fetch(`/videos/${videoId}/top-comment`)
+            .then(response => response.json())
+            .then(comment => {
+              const topCommentElement = document.getElementById(`top-comment-${videoId}`);
+              topCommentElement.innerHTML = `
+                    <div class="comment">
+                        <p>${comment.content}</p>
+                        <small>By ${comment.user.username}</small>
+                        <button onclick="likeComment(${comment.id})" class="comment-like-button">Like</button>
+                        <span>${comment.likeCount} likes</span>
+                    </div>
+                `;
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  function loadComments(videoId, page = 0) {
+    fetch(`/api/comments/video/${videoId}?page=${page}&size=10&sort=likeCount,desc&sort=createdAt,desc`)
+            .then(response => response.json())
+            .then(data => {
+              const commentsElement = document.getElementById(`comments-${videoId}`);
+              data.content.forEach(comment => {
+                commentsElement.innerHTML += `
+                    <div class="comment">
+                        <p>${comment.content}</p>
+                        <small>By ${comment.user.username}</small>
+                        <button onclick="likeComment(${comment.id})" class="comment-like-button">
+                            ${comment.likedByCurrentUser ? 'Unlike' : 'Like'}
+                        </button>
+                        <span class="comment-like-count">${comment.likeCount} likes</span>
+                    </div>
+                `;
+              });
+              if (!data.last) {
+                commentsElement.innerHTML += `
+                    <button onclick="loadComments(${videoId}, ${page + 1})" class="show-more-button">Load more</button>
+                `;
+              }
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Load top comments for all videos when the page loads
+  document.addEventListener('DOMContentLoaded', function() {
+    const videos = document.querySelectorAll('.video-item');
+    videos.forEach(video => {
+      const videoId = video.querySelector('video').id.split('-')[1];
+      loadTopComment(videoId);
+    });
+  });
+
+  function addComment(videoId) {
+    const commentInput = document.getElementById(`comment-input-${videoId}`);
+    const content = commentInput.value.trim();
+
+    if (content) {
+      fetch('/api/comments', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ videoId: videoId, content: content })
+      })
+              .then(response => response.text())
+              .then(html => {
+                commentInput.value = '';
+                const commentsElement = document.getElementById(`comments-${videoId}`);
+                commentsElement.insertAdjacentHTML('afterbegin', html);
+              })
+              .catch(error => console.error('Error:', error));
+    }
+  }
+
+  // 각 댓글 폼에 이벤트 리스너 추가
+  document.addEventListener('DOMContentLoaded', function() {
+    const commentForms = document.querySelectorAll('.comment-form');
+    commentForms.forEach(form => {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const videoId = this.id.split('-')[2];
+        addComment(videoId);
+      });
+    });
+  });
+
+  function likeComment(commentId) {
+    fetch(`/api/comments/${commentId}/like`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    })
+            .then(response => response.json())
+            .then(data => {
+              const commentElement = document.querySelector(`[data-comment-id="${commentId}"]`);
+              if (commentElement) {
+                const likeButton = commentElement.querySelector('.comment-like-button');
+                const likeCount = commentElement.querySelector('.comment-like-count');
+
+                if (likeButton && likeCount) {
+                  likeButton.textContent = data.liked ? 'Unlike' : 'Like';
+                  likeCount.textContent = `${data.likeCount} likes`;
+                }
+              }
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  function loadMoreComments(videoId) {
+    const commentsElement = document.getElementById(`comments-${videoId}`);
+    const commentCount = commentsElement.children.length;
+
+    fetch(`/api/comments/video/${videoId}?page=${Math.floor(commentCount / 5)}&size=5&sort=likeCount,desc&sort=createdAt,desc`)
+            .then(response => response.json())
+            .then(data => {
+              data.content.forEach(comment => {
+                commentsElement.innerHTML += `
+                    <div class="comment" data-comment-id="${comment.id}">
+                        <p>${comment.content}</p>
+                        <small>By ${comment.user.username}</small>
+                        <button onclick="likeComment(${comment.id})" class="comment-like-button">
+                            ${comment.likedByCurrentUser ? 'Unlike' : 'Like'}
+                        </button>
+                        <span class="comment-like-count">${comment.likeCount} likes</span>
+                    </div>
+                `;
+              });
+              if (data.last) {
+                document.querySelector(`button[onclick="loadMoreComments(${videoId})"]`).style.display = 'none';
+              }
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+</script>
+</body>
+</html>
