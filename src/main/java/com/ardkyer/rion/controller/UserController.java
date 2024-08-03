@@ -2,6 +2,12 @@ package com.ardkyer.rion.controller;
 
 import com.ardkyer.rion.entity.*;
 import com.ardkyer.rion.service.*;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +21,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Controller
+@Tag(name = "User", description = "User management API")
 public class UserController {
     private final UserService userService;
     private final VideoService videoService;
@@ -27,9 +34,10 @@ public class UserController {
         this.commentService = commentService;
     }
 
-    // Existing REST API endpoints
     @PostMapping("/api/users/register")
     @ResponseBody
+    @Operation(summary = "Register a new user", description = "Creates a new user account")
+    @ApiResponse(responseCode = "201", description = "Successfully registered user", content = @Content(schema = @Schema(implementation = User.class)))
     public ResponseEntity<User> registerUser(@RequestBody User user) {
         User registeredUser = userService.registerUser(user);
         return new ResponseEntity<>(registeredUser, HttpStatus.CREATED);
@@ -37,7 +45,11 @@ public class UserController {
 
     @GetMapping("/api/users/{id}")
     @ResponseBody
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
+    @Operation(summary = "Get a user by ID", description = "Retrieves a user's information by their ID")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved user", content = @Content(schema = @Schema(implementation = User.class)))
+    @ApiResponse(responseCode = "404", description = "User not found")
+    public ResponseEntity<User> getUserById(
+            @Parameter(description = "ID of the user to retrieve", required = true) @PathVariable Long id) {
         return userService.getUserById(id)
                 .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
@@ -45,7 +57,12 @@ public class UserController {
 
     @PutMapping("/api/users/{id}")
     @ResponseBody
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User user) {
+    @Operation(summary = "Update a user", description = "Updates an existing user's information")
+    @ApiResponse(responseCode = "200", description = "Successfully updated user", content = @Content(schema = @Schema(implementation = User.class)))
+    @ApiResponse(responseCode = "404", description = "User not found")
+    public ResponseEntity<User> updateUser(
+            @Parameter(description = "ID of the user to update", required = true) @PathVariable Long id,
+            @RequestBody User user) {
         if (!userService.getUserById(id).isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -56,7 +73,11 @@ public class UserController {
 
     @DeleteMapping("/api/users/{id}")
     @ResponseBody
-    public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    @Operation(summary = "Delete a user", description = "Deletes an existing user")
+    @ApiResponse(responseCode = "204", description = "Successfully deleted user")
+    @ApiResponse(responseCode = "404", description = "User not found")
+    public ResponseEntity<Void> deleteUser(
+            @Parameter(description = "ID of the user to delete", required = true) @PathVariable Long id) {
         if (!userService.getUserById(id).isPresent()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -64,8 +85,8 @@ public class UserController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // Profile related methods
     @GetMapping("/profile")
+    @Operation(summary = "Show user profile", description = "Displays the profile page for the authenticated user")
     public String showProfile(Model model) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userService.findByUsername(auth.getName());
@@ -83,7 +104,10 @@ public class UserController {
     }
 
     @PostMapping("/profile/delete-video/{id}")
-    public String deleteVideo(@PathVariable Long id) {
+    @Operation(summary = "Delete a video", description = "Deletes a video owned by the authenticated user")
+    @ApiResponse(responseCode = "302", description = "Redirects to profile page after deletion")
+    public String deleteVideo(
+            @Parameter(description = "ID of the video to delete", required = true) @PathVariable Long id) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         User currentUser = userService.findByUsername(auth.getName());
 

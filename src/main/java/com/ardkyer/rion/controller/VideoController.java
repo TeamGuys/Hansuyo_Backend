@@ -8,6 +8,12 @@ import com.ardkyer.rion.service.CommentService;
 import com.ardkyer.rion.service.VideoService;
 import com.ardkyer.rion.service.UserService;
 import com.ardkyer.rion.service.LikeService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
@@ -30,6 +36,7 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/videos")
+@Tag(name = "Video", description = "Video management API")
 public class VideoController {
 
     @Autowired
@@ -45,6 +52,7 @@ public class VideoController {
     private CommentService commentService;
 
     @GetMapping
+    @Operation(summary = "List all videos", description = "Retrieves a list of all videos with comments")
     public String listVideos(Model model, Authentication authentication) {
         List<Video> videos = videoService.getAllVideosWithComments();
         User currentUser = null;
@@ -62,6 +70,7 @@ public class VideoController {
     }
 
     @GetMapping("/videos")
+    @Operation(summary = "Get all videos", description = "Retrieves a list of all videos")
     public String getVideos(Model model, Authentication authentication) {
         List<Video> videos = videoService.getAllVideos();
         Optional<User> currentUser = Optional.empty();
@@ -74,7 +83,8 @@ public class VideoController {
     }
 
     @GetMapping("/{id}")
-    public String watchVideo(@PathVariable Long id, Model model, Authentication authentication) {
+    @Operation(summary = "Watch a video", description = "Retrieves a specific video for watching")
+    public String watchVideo(@Parameter(description = "ID of the video to watch") @PathVariable Long id, Model model, Authentication authentication) {
         Optional<Video> videoOptional = videoService.getVideoById(id);
         if (videoOptional.isPresent()) {
             Video video = videoOptional.get();
@@ -91,7 +101,8 @@ public class VideoController {
     }
 
     @GetMapping("/file/{fileName:.+}")
-    public ResponseEntity<InputStreamResource> serveFile(@PathVariable String fileName) {
+    @Operation(summary = "Serve video file", description = "Streams a video file")
+    public ResponseEntity<InputStreamResource> serveFile(@Parameter(description = "Name of the file to serve") @PathVariable String fileName) {
         S3Object s3Object = videoService.getVideoFile(fileName);
 
         HttpHeaders headers = new HttpHeaders();
@@ -104,11 +115,13 @@ public class VideoController {
     }
 
     @GetMapping("/upload")
+    @Operation(summary = "Show upload form", description = "Displays the video upload form")
     public String showUploadForm() {
         return "uploadForm";
     }
 
     @PostMapping("/upload")
+    @Operation(summary = "Upload a video", description = "Uploads a new video")
     public String handleFileUpload(@RequestParam("title") String title,
                                    @RequestParam("description") String description,
                                    @RequestParam("video") MultipartFile file,
@@ -139,9 +152,12 @@ public class VideoController {
     }
 
     @GetMapping("/{id}/comments")
-    public ResponseEntity<Page<Comment>> getVideoComments(@PathVariable Long id,
-                                                          @RequestParam(defaultValue = "0") int page,
-                                                          @RequestParam(defaultValue = "10") int size) {
+    @Operation(summary = "Get video comments", description = "Retrieves comments for a specific video")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved comments", content = @Content(schema = @Schema(implementation = Page.class)))
+    public ResponseEntity<Page<Comment>> getVideoComments(
+            @Parameter(description = "ID of the video") @PathVariable Long id,
+            @Parameter(description = "Page number") @RequestParam(defaultValue = "0") int page,
+            @Parameter(description = "Number of items per page") @RequestParam(defaultValue = "10") int size) {
         Video video = new Video();
         video.setId(id);
         Page<Comment> comments = commentService.getCommentsByVideo(video, PageRequest.of(page, size));
@@ -149,7 +165,10 @@ public class VideoController {
     }
 
     @GetMapping("/{id}/top-comment")
-    public ResponseEntity<Comment> getTopComment(@PathVariable Long id) {
+    @Operation(summary = "Get top comment", description = "Retrieves the top comment for a specific video")
+    @ApiResponse(responseCode = "200", description = "Successfully retrieved top comment", content = @Content(schema = @Schema(implementation = Comment.class)))
+    @ApiResponse(responseCode = "404", description = "No comments found for the video")
+    public ResponseEntity<Comment> getTopComment(@Parameter(description = "ID of the video") @PathVariable Long id) {
         Video video = new Video();
         video.setId(id);
         Optional<Comment> topComment = commentService.getTopCommentForVideo(video);
