@@ -81,7 +81,7 @@ public class SearchController {
         model.addAttribute("videos", videos);
         model.addAttribute("exercises", exerciseService.getAllExercises());
         model.addAttribute("recentSearches", recentSearches);
-        return "searchResults";
+        return "searchResults.html";
     }
 
     @PostMapping("/search/recent/delete")

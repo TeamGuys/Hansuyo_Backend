@@ -139,8 +139,12 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.querySelector('.search-input');
-        searchInput.addEventListener('focus', function() {
-            window.location.href = '/search/results';
+
+        const searchForm = document.querySelector('.search-form');
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const query = searchInput.value;
+            window.location.href = '/search/results?query=' + encodeURIComponent(query);
         });
 
         const videos = document.querySelectorAll('video');

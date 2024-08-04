@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Inter', sans-serif;
             margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        .container {
+            max-width: 935px;
+            margin: 0 auto;
             padding: 20px;
-            background-color: #fafafa;
         }
         .search-container {
             display: flex;
@@ -18,61 +24,77 @@
         .search-input {
             width: 300px;
             padding: 10px;
-            border: 1px solid #dbdbdb;
+            border: 1px solid #262626;
             border-radius: 5px 0 0 5px;
             outline: none;
+            background-color: #262626;
+            color: #fff;
+            font-family: 'Inter', sans-serif;
         }
         .search-button {
             padding: 10px 20px;
-            border: 1px solid #dbdbdb;
-            border-left: none;
-            background-color: #0095f6;
+            border: none;
+            background-color: #405de6;
             color: white;
             border-radius: 0 5px 5px 0;
             cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
         }
         .recent-searches, .exercise-grid {
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
         .recent-searches h2, .exercise-grid h2 {
             margin-top: 0;
+            color: #fff;
+            font-weight: 600;
         }
         .recent-search-list, .exercise-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 10px;
+            gap: 15px;
         }
         .recent-search-item, .exercise-item {
-            padding: 10px;
-            border: 1px solid #dbdbdb;
+            padding: 15px;
+            border: 1px solid #262626;
             border-radius: 5px;
-            background-color: #fff;
+            background-color: #121212;
             text-align: center;
             cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .recent-search-item:hover, .exercise-item:hover {
+            background-color: #1c1c1c;
         }
         .recent-search-item a, .exercise-item a {
             text-decoration: none;
-            color: #0095f6;
-            font-size: 16px;
+            color: #fff;
+            font-size: 14px;
             display: block;
         }
         .delete-button {
-            background-color: #f44336;
+            background-color: #ed4956;
             color: white;
             border: none;
             padding: 5px 10px;
             cursor: pointer;
             border-radius: 3px;
-            margin-top: 5px;
+            margin-top: 10px;
+            transition: background-color 0.3s;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+        }
+        .delete-button:hover {
+            background-color: #c13584;
         }
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
+            gap: 28px;
         }
         .video-item {
-            border: 1px solid #dbdbdb;
-            background-color: #fff;
+            border: 1px solid #262626;
+            background-color: #121212;
             border-radius: 3px;
             overflow: hidden;
         }
@@ -90,59 +112,62 @@
             object-fit: cover;
         }
         .video-info {
-            padding: 10px;
+            padding: 15px;
         }
         .video-title {
             margin: 0;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
+            color: #fff;
         }
         .video-user {
-            color: #8e8e8e;
+            color: #a8a8a8;
             font-size: 14px;
             margin-top: 5px;
         }
     </style>
 </head>
 <body>
-<div class="search-container">
-    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
-    <button class="search-button" onclick="performSearch()">Search</button>
-</div>
+<div class="container">
+    <div class="search-container">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search...">
+        <button class="search-button" onclick="performSearch()">Search</button>
+    </div>
 
-<div class="recent-searches">
-    <h2>Recent Searches</h2>
-    <div class="recent-search-list">
-        <div class="recent-search-item" th:each="search : ${recentSearches}">
-            <a th:href="@{'/search/results?query=' + ${search.keyword}}"
-               th:text="${search.keyword}">Recent Search</a>
-            <form th:action="@{'/search/recent/delete'}" method="post" style="display:inline;">
-                <input type="hidden" name="query" th:value="${search.keyword}" />
-                <button type="submit" class="delete-button">Delete</button>
-            </form>
+    <div class="recent-searches">
+        <h2>Recent Searches</h2>
+        <div class="recent-search-list">
+            <div class="recent-search-item" th:each="search : ${recentSearches}">
+                <a th:href="@{'/search/results?query=' + ${search.keyword}}"
+                   th:text="${search.keyword}">Recent Search</a>
+                <form th:action="@{'/search/recent/delete'}" method="post" style="display:inline;">
+                    <input type="hidden" name="query" th:value="${search.keyword}" />
+                    <button type="submit" class="delete-button">Delete</button>
+                </form>
+            </div>
         </div>
     </div>
-</div>
 
-<h2>Exercise List</h2>
-<div class="exercise-grid">
-    <div class="exercise-item" th:each="exercise : ${exercises}">
-        <a th:href="@{'/search/results?query=' + ${exercise.name}}"
-           th:text="${exercise.name}">Exercise Name</a>
-    </div>
-</div>
-
-<div class="video-grid" id="searchResults">
-    <div th:each="video : ${videos}" class="video-item">
-        <div class="video-container">
-            <video th:id="'video-' + ${video.id}" loop muted>
-                <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+    <h2>Exercise List</h2>
+    <div class="exercise-grid">
+        <div class="exercise-item" th:each="exercise : ${exercises}">
+            <a th:href="@{'/search/results?query=' + ${exercise.name}}"
+               th:text="${exercise.name}">Exercise Name</a>
         </div>
-        <div class="video-info">
-            <h3 class="video-title" th:text="${video?.title}"></h3>
-            <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
+    </div>
+
+    <div class="video-grid" id="searchResults">
+        <div th:each="video : ${videos}" class="video-item">
+            <div class="video-container">
+                <video th:id="'video-' + ${video.id}" loop muted>
+                    <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="video-info">
+                <h3 class="video-title" th:text="${video?.title}"></h3>
+                <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
+            </div>
         </div>
     </div>
 </div>
@@ -150,8 +175,10 @@
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('focus', function() {
-            // searchResults 페이지에서는 포커스 시 아무 동작도 하지 않음
+        const searchForm = document.querySelector('.search-container');
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            performSearch();
         });
     });
 
