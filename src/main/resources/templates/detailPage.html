@@ -1,164 +1,129 @@
+<!--detailPage.html-->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Video Gallery</title>
+    <title th:text="${video.title}">Video Detail</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+        }
+        .container {
+            max-width: 935px;
+            margin: 0 auto;
             padding: 20px;
-            background-color: #fafafa;
         }
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-        }
-        .video-item {
-            border: 1px solid #dbdbdb;
-            background-color: #fff;
+        .video-detail {
+            display: flex;
+            background-color: #121212;
             border-radius: 3px;
             overflow: hidden;
         }
         .video-container {
-            position: relative;
-            width: 100%;
-            padding-top: 100%; /* 1:1 Aspect Ratio */
+            flex: 1;
+            max-width: 614px;
         }
         .video-container video {
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            display: block;
         }
         .video-info {
-            padding: 10px;
+            flex: 1;
+            padding: 20px;
+            max-width: 335px;
         }
         .video-title {
-            margin: 0;
+            margin: 0 0 10px 0;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
         }
         .video-user {
-            color: #8e8e8e;
+            color: #a8a8a8;
             font-size: 14px;
-            margin-top: 5px;
-        }
-        .upload-button {
-            display: inline-block;
-            background-color: #0095f6;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
             margin-bottom: 20px;
         }
         .like-button {
-            background-color: #0095f6;
-            color: white;
-            border: none;
+            background-color: transparent;
+            color: #fff;
+            border: 1px solid #fff;
             padding: 5px 10px;
-            border-radius: 5px;
+            border-radius: 3px;
             cursor: pointer;
+            font-size: 14px;
         }
         .like-count {
             margin-left: 10px;
+            font-size: 14px;
+        }
+        .comment-section {
+            margin-top: 20px;
+        }
+        .comment {
+            border-bottom: 1px solid #262626;
+            padding: 10px 0;
         }
         .comment-form {
-            margin-top: 10px;
+            margin-top: 20px;
         }
         .comment-input {
-            width: 80%;
-            padding: 5px;
+            width: 100%;
+            padding: 10px;
+            background-color: #262626;
+            border: none;
+            color: #fff;
+            border-radius: 3px;
         }
         .comment-submit {
             background-color: #0095f6;
             color: white;
             border: none;
             padding: 5px 10px;
-            border-radius: 5px;
+            border-radius: 3px;
             cursor: pointer;
-        }
-        .comment-section {
             margin-top: 10px;
-        }
-        .comment {
-            border: 1px solid #dbdbdb;
-            padding: 10px;
-            margin-bottom: 10px;
-        }
-        .comment-like-button {
-            background-color: #0095f6;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-left: 10px;
         }
         .show-more-button {
-            background-color: #0095f6;
-            color: white;
+            background-color: transparent;
+            color: #a8a8a8;
             border: none;
             padding: 5px 10px;
-            border-radius: 5px;
             cursor: pointer;
             margin-top: 10px;
         }
-        .search-form {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 20px;
-        }
-        .search-input {
-            width: 300px;
-            padding: 10px;
-            border: 1px solid #dbdbdb;
-            border-radius: 5px 0 0 5px;
-            outline: none;
-        }
-        .search-button {
-            padding: 10px 20px;
-            border: 1px solid #dbdbdb;
-            border-left: none;
-            background-color: #0095f6;
-            color: white;
-            border-radius: 0 5px 5px 0;
-            cursor: pointer;
-        }
-
     </style>
 </head>
 <body>
-
-
-
-<div class="video-grid">
-    <div th:each="video : ${videos}" class="video-item" >
+<div class="container">
+    <div class="video-detail">
         <div class="video-container">
-            <video th:id="'video-' + ${video.id}" loop muted>
-                <source th:src="@{'/videos/file/' + ${video?.videoUrl ?: ''}}" type="video/mp4">
+            <video th:id="'video-' + ${video.id}" controls>
+                <source th:src="@{'/videos/file/' + ${video.videoUrl}}" type="video/mp4">
                 Your browser does not support the video tag.
             </video>
         </div>
         <div class="video-info">
-            <h3 class="video-title" th:text="${video?.title}"></h3>
-            <p class="video-user" th:text="${'Uploaded by ' + video?.user?.username}"></p>
-            <button th:id="'like-button-' + ${video?.id}" class="like-button" th:onclick="'likeVideo(' + ${video?.id} + ')'">Like</button>
-            <span th:id="'like-count-' + ${video?.id}" class="like-count" th:text="${video?.likeCount} + ' likes'"></span>
+            <h1 class="video-title" th:text="${video.title}">Video Title</h1>
+            <p class="video-user" th:text="${'Uploaded by ' + video.user.username}">Uploaded by User</p>
+            <button th:id="'like-button-' + ${video.id}" class="like-button" th:onclick="'likeVideo(' + ${video.id} + ')'">
+                <span th:text="${video.likedByCurrentUser ? 'Unlike' : 'Like'}">Like</span>
+            </button>
+            <span th:id="'like-count-' + ${video.id}" class="like-count" th:text="${video.likeCount} + ' likes'"></span>
+
             <div class="comment-section">
-                <h4>Comments:</h4>
+                <h4>Comments</h4>
                 <div th:id="'comments-' + ${video.id}">
                     <div th:each="comment : ${video.comments}" th:fragment="commentItem" class="comment" th:data-comment-id="${comment?.id}">
                         <p th:text="${comment?.content}">Comment content</p>
                         <small th:text="${'By ' + comment?.user?.username}">By Username</small>
-                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="comment-like-button">
+                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="like-button">
                             <span th:text="${currentUser != null and currentUser.isPresent() and comment != null and comment.isLikedByCurrentUser(currentUser.get()) ? 'Unlike' : 'Like'}">Like</span>
                         </button>
-                        <span class="comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
+                        <span class="like-count" th:text="${comment?.likeCount} + ' likes'"></span>
                     </div>
                 </div>
                 <button th:onclick="'loadMoreComments(' + ${video.id} + ')'" class="show-more-button">Load more comments</button>
