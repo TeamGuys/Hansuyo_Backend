@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface RecentSearchRepository extends JpaRepository<RecentSearch, Long> {
     List<RecentSearch> findByUserOrderBySearchTimeDesc(User user);
     Optional<RecentSearch> findByUserAndKeyword(User user, String keyword);
+    void deleteAllByUser(User user);
 }

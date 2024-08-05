@@ -28,6 +28,7 @@ import java.util.Set;
 @Controller
 @Tag(name = "Search", description = "Search management API")
 public class SearchController {
+
     @Autowired
     private VideoService videoService;
 
@@ -45,7 +46,8 @@ public class SearchController {
             summary = "Search for videos",
             description = "Search for videos based on the query, which can be an exercise name or a hashtag.",
             parameters = {
-                    @Parameter(name = "query", description = "The search query (exercise name or hashtag)", required = false)
+                    @Parameter(name = "query", description = "The search query (exercise name or hashtag)", required = false),
+                    @Parameter(name = "source", description = "The source of the search query (search or exercise)", required = false)
             },
             responses = {
                     @ApiResponse(responseCode = "200", description = "Successfully retrieved search results",
@@ -53,6 +55,7 @@ public class SearchController {
             }
     )
     public String searchResults(@RequestParam(value = "query", required = false) String query,
+                                @RequestParam(value = "source", required = false) String source,
                                 Model model,
                                 Authentication authentication) {
         List<Video> videos = null;
@@ -63,14 +66,12 @@ public class SearchController {
             } else {
                 videos = videoService.searchVideosByHashtags(hashtags);
             }
+
             // 현재 사용자 가져오기
             User user = userService.findByUsername(authentication.getName());
 
-            // 운동 목록에서 검색한 것이 아닌 경우에만 저장
-            boolean isExercise = exerciseService.getAllExercises()
-                    .stream()
-                    .anyMatch(exercise -> exercise.getName().equalsIgnoreCase(query));
-            if (!isExercise) {
+            // 검색창에서 입력된 검색어만 저장
+            if (!"exercise".equals(source)) {
                 recentSearchService.addOrUpdateRecentSearch(user, query);
             }
         }
@@ -78,11 +79,13 @@ public class SearchController {
         // 최근 검색 기록 가져오기
         User user = userService.findByUsername(authentication.getName());
         List<RecentSearch> recentSearches = recentSearchService.getRecentSearches(user);
+
         model.addAttribute("videos", videos);
         model.addAttribute("exercises", exerciseService.getAllExercises());
         model.addAttribute("recentSearches", recentSearches);
         return "searchResults";
     }
+
 
     @PostMapping("/search/recent/delete")
     @Operation(
@@ -99,6 +102,20 @@ public class SearchController {
                                      Authentication authentication) {
         User user = userService.findByUsername(authentication.getName());
         recentSearchService.deleteRecentSearch(user, query);
+        return "redirect:/search/results";
+    }
+
+    @PostMapping("/search/recent/delete/all")
+    @Operation(
+            summary = "Delete all recent search queries",
+            description = "Delete all recent search queries of the logged-in user.",
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Successfully deleted all recent search queries")
+            }
+    )
+    public String deleteAllRecentSearch(Authentication authentication) {
+        User user = userService.findByUsername(authentication.getName());
+        recentSearchService.deleteAllRecentSearches(user);
         return "redirect:/search/results";
     }
 }

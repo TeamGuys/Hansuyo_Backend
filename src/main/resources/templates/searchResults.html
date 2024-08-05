@@ -105,16 +105,23 @@
     </style>
 </head>
 <body>
+
 <div class="search-container">
-    <input type="text" class="search-input" id="searchInput" placeholder="Search...">
-    <button class="search-button" onclick="performSearch()">Search</button>
+    <form action="/search/results" method="get">
+        <input type="text" class="search-input" name="query" id="searchInput" placeholder="Search...">
+        <input type="hidden" name="source" value="search">
+        <button type="submit" class="search-button">Search</button>
+    </form>
 </div>
 
 <div class="recent-searches">
     <h2>Recent Searches</h2>
+    <form th:action="@{/search/recent/delete/all}" method="post">
+        <button type="submit" class="delete-button">Delete All</button>
+    </form>
     <div class="recent-search-list">
         <div class="recent-search-item" th:each="search : ${recentSearches}">
-            <a th:href="@{'/search/results?query=' + ${search.keyword}}"
+            <a th:href="@{'/search/results?query=' + ${search.keyword} + '&source=search'}"
                th:text="${search.keyword}">Recent Search</a>
             <form th:action="@{'/search/recent/delete'}" method="post" style="display:inline;">
                 <input type="hidden" name="query" th:value="${search.keyword}" />
@@ -127,7 +134,7 @@
 <h2>Exercise List</h2>
 <div class="exercise-grid">
     <div class="exercise-item" th:each="exercise : ${exercises}">
-        <a th:href="@{'/search/results?query=' + ${exercise.name}}"
+        <a th:href="@{'/search/results?query=' + ${exercise.name} + '&source=exercise'}"
            th:text="${exercise.name}">Exercise Name</a>
     </div>
 </div>
@@ -157,8 +164,9 @@
 
     function performSearch() {
         const query = document.getElementById('searchInput').value;
-        window.location.href = '/search/results?query=' + encodeURIComponent(query);
+        window.location.href = '/search/results?query=' + encodeURIComponent(query) + '&source=search';
     }
 </script>
+
 </body>
 </html>
