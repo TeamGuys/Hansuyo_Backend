@@ -5,6 +5,7 @@ import com.ardkyer.rion.entity.User;
 import com.ardkyer.rion.repository.RecentSearchRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -41,5 +42,12 @@ public class RecentSearchServiceImpl implements RecentSearchService {
     public void deleteRecentSearch(User user, String keyword) {
         Optional<RecentSearch> existingSearch = recentSearchRepository.findByUserAndKeyword(user, keyword);
         existingSearch.ifPresent(recentSearchRepository::delete);
+    }
+
+    @Override
+    @Transactional  // 트랜잭션 적용
+    public void deleteAllRecentSearches(User user) {
+        // user에 대한 모든 최근 검색 기록 삭제하는 로직 구현
+        recentSearchRepository.deleteAllByUser(user);
     }
 }
