@@ -61,7 +61,7 @@
         .upload-button:hover {
             background-color: #1877f2;
         }
-        .like-button, .comment-like-button, .show-more-button, .follow-button {
+        .like-button, .comment-like-button, .show-more-button{
             background-color: #3897f0;
             color: white;
             border: none;
@@ -70,7 +70,7 @@
             cursor: pointer;
             transition: background-color 0.3s;
         }
-        .like-button:hover, .comment-like-button:hover, .show-more-button:hover, .follow-button:hover {
+        .like-button:hover, .comment-like-button:hover, .show-more-button:hover{
             background-color: #1877f2;
         }
         .like-count, .comment-like-count {
@@ -174,12 +174,6 @@
                     Your browser does not support the video tag.
                 </video>
             </a>
-            <button th:if="${currentUser.isPresent() and video.user.id != currentUser.get().id}"
-                    th:attr="data-user-id=${video.user.id}"
-                    th:onclick="'toggleFollow(' + ${video.user.id} + ')'"
-                    class="follow-button">
-                Follow
-            </button>
         </div>
         <div class="video-info">
             <h3 class="video-title" th:text="${video.title}">Video Title</h3>
@@ -359,60 +353,6 @@
             })
             .catch(error => console.error('Error:', error));
     }
-
-    function toggleFollow(userId) {
-        fetch('/api/follows?followedId=' + userId, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    updateAllFollowButtons(userId, data.isFollowing);
-                } else {
-                    console.error('Follow action failed:', data.message);
-                    alert('Failed to follow/unfollow: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred. Please try again.');
-            });
-    }
-
-    function updateAllFollowButtons(userId, isFollowing) {
-        const followButtons = document.querySelectorAll('.follow-button[data-user-id="' + userId + '"]');
-        followButtons.forEach(button => {
-            button.textContent = isFollowing ? 'Unfollow' : 'Follow';
-        });
-    }
-
-    // 페이지 로드 시 팔로우 상태 확인
-    function checkFollowStatus(userId) {
-        fetch(`/api/follows/check?followedId=${userId}`)
-            .then(response => response.json())
-            .then(data => {
-                updateAllFollowButtons(userId, data.isFollowing);
-            })
-            .catch(error => console.error('Error:', error));
-    }
-
-    // 페이지 로드 시 모든 팔로우 버튼 상태 확인
-    document.addEventListener('DOMContentLoaded', function() {
-        const userIds = new Set();
-        const followButtons = document.querySelectorAll('.follow-button');
-        followButtons.forEach(button => {
-            const userId = button.getAttribute('data-user-id');
-            if (userId) {
-                userIds.add(userId);
-            }
-        });
-        userIds.forEach(userId => {
-            checkFollowStatus(userId);
-        });
-    });
 
     function loadMoreComments(videoId) {
         const commentsElement = document.getElementById(`comments-${videoId}`);

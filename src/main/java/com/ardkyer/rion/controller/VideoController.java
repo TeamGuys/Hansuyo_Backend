@@ -141,13 +141,20 @@ public class VideoController {
     }
 
     @GetMapping("/detail/{id}")
-    @Operation(summary = "Get video details", description = "Retrieves details of a specific video")
     public String detail(@PathVariable Long id, Model model, Authentication authentication) {
         Optional<Video> videoOptional = videoService.getVideoById(id);
         if (videoOptional.isPresent()) {
             Video video = videoOptional.get();
             prepareVideoForDisplay(video, authentication);
+
+            boolean isFollowing = false;
+            if (authentication != null) {
+                User currentUser = userService.findByUsername(authentication.getName());
+                isFollowing = followService.isFollowing(currentUser, video.getUser());
+            }
+
             model.addAttribute("video", video);
+            model.addAttribute("isFollowing", isFollowing);
             model.addAttribute("currentUser", getCurrentUser(authentication));
             return "detailPage";
         } else {

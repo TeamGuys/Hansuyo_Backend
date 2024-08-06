@@ -47,7 +47,7 @@
             font-size: 14px;
             margin-bottom: 20px;
         }
-        .like-button {
+        .like-button, .comment-like-button {
             background-color: transparent;
             color: #fff;
             border: 1px solid #fff;
@@ -55,10 +55,22 @@
             border-radius: 3px;
             cursor: pointer;
             font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        .like-button:hover, .comment-like-button:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        .like-button.liked, .comment-like-button.liked {
+            background-color: #fff;
+            color: #000;
+        }
+        .like-button.liked:hover, .comment-like-button.liked:hover {
+            background-color: #e0e0e0;
         }
         .like-count {
             margin-left: 10px;
             font-size: 14px;
+            color: #a8a8a8;
         }
         .comment-section {
             margin-top: 20px;
@@ -79,25 +91,59 @@
             border-radius: 3px;
         }
         .comment-submit {
-            background-color: #0095f6;
-            color: white;
+            background-color: #fff;
+            color: #000;
             border: none;
             padding: 5px 10px;
             border-radius: 3px;
             cursor: pointer;
             margin-top: 10px;
+            transition: all 0.3s ease;
         }
-        .show-more-button {
-            background-color: transparent;
-            color: #a8a8a8;
+        .comment-submit:hover {
+            background-color: #e0e0e0;
+        }
+        .follow-button {
+            background-color: #0095f6;
+            color: #fff;
             border: none;
-            padding: 5px 10px;
+            padding: 8px 20px;
+            border-radius: 4px;
+            font-weight: 600;
             cursor: pointer;
-            margin-top: 10px;
+            transition: background-color 0.3s;
+            margin-left: 10px;
+        }
+        .follow-button:hover {
+            background-color: #0074cc;
+        }
+        .follow-button.following {
+            background-color: #333;
+            color: #fff;
+        }
+        .home-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #3897f0;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            z-index: 1000;
+        }
+        .home-button:hover {
+            background-color: #1877f2;
         }
     </style>
 </head>
 <body>
+<a href="/videos" class="home-button">Back to Videos</a>
 <div class="container">
     <div class="video-detail">
         <div class="video-container">
@@ -108,7 +154,16 @@
         </div>
         <div class="video-info">
             <h1 class="video-title" th:text="${video.title}">Video Title</h1>
-            <p class="video-user" th:text="${'Uploaded by ' + video.user.username}">Uploaded by User</p>
+            <p class="video-user">
+                <span th:text="${'Uploaded by ' + video.user.username}">Uploaded by User</span>
+                <button th:if="${currentUser.isPresent() and video.user.id != currentUser.get().id}"
+                        th:attr="data-user-id=${video.user.id}"
+                        th:onclick="'toggleFollow(' + ${video.user.id} + ')'"
+                        th:class="${isFollowing ? 'follow-button following' : 'follow-button'}"
+                        th:text="${isFollowing ? 'Following' : 'Follow'}">
+                    Follow
+                </button>
+            </p>
             <button th:id="'like-button-' + ${video.id}" class="like-button" th:onclick="'likeVideo(' + ${video.id} + ')'">
                 <span th:text="${video.likedByCurrentUser ? 'Unlike' : 'Like'}">Like</span>
             </button>
@@ -120,10 +175,10 @@
                     <div th:each="comment : ${video.comments}" th:fragment="commentItem" class="comment" th:data-comment-id="${comment?.id}">
                         <p th:text="${comment?.content}">Comment content</p>
                         <small th:text="${'By ' + comment?.user?.username}">By Username</small>
-                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="like-button">
+                        <button th:onclick="'likeComment(' + ${comment?.id} + ')'" class="like-button comment-like-button">
                             <span th:text="${currentUser != null and currentUser.isPresent() and comment != null and comment.isLikedByCurrentUser(currentUser.get()) ? 'Unlike' : 'Like'}">Like</span>
                         </button>
-                        <span class="like-count" th:text="${comment?.likeCount} + ' likes'"></span>
+                        <span class="like-count comment-like-count" th:text="${comment?.likeCount} + ' likes'"></span>
                     </div>
                 </div>
                 <button th:onclick="'loadMoreComments(' + ${video.id} + ')'" class="show-more-button">Load more comments</button>
@@ -192,8 +247,10 @@
                 const likeCount = document.getElementById('like-count-' + videoId);
                 if (data.liked) {
                     likeButton.textContent = 'Unlike';
+                    likeButton.classList.add('liked');
                 } else {
                     likeButton.textContent = 'Like';
+                    likeButton.classList.remove('liked');
                 }
                 likeCount.textContent = data.likeCount + ' likes';
             })
@@ -305,6 +362,13 @@
                     if (likeButton && likeCount) {
                         likeButton.textContent = data.liked ? 'Unlike' : 'Like';
                         likeCount.textContent = `${data.likeCount} likes`;
+
+                        // 버튼 스타일 변경
+                        if (data.liked) {
+                            likeButton.classList.add('liked');
+                        } else {
+                            likeButton.classList.remove('liked');
+                        }
                     }
                 }
             })
@@ -335,6 +399,36 @@
                 }
             })
             .catch(error => console.error('Error:', error));
+    }
+
+    function toggleFollow(userId) {
+        fetch('/api/follows?followedId=' + userId, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    updateAllFollowButtons(userId, data.isFollowing);
+                } else {
+                    console.error('Follow action failed:', data.message);
+                    alert('Failed to follow/unfollow: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
+    }
+
+    function updateAllFollowButtons(userId, isFollowing) {
+        const followButtons = document.querySelectorAll('.follow-button[data-user-id="' + userId + '"]');
+        followButtons.forEach(button => {
+            button.textContent = isFollowing ? 'Following' : 'Follow';
+            button.classList.toggle('following', isFollowing);
+        });
     }
 
 </script>
